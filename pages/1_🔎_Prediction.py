@@ -15,7 +15,9 @@ st.set_page_config(page_title="Prédiction | Aletheia", page_icon="🔎", layout
 # INTERFACE UTILISATEUR
 # ==============================================================================
 st.title("🔎 Aletheia - Détecteur d'Hallucinations LLM")
-st.markdown("Posez une question, le modèle génère une réponse et **Aletheia vérifie la véracité** des affirmations.")
+st.markdown(
+    "Posez une question, le modèle génère une réponse et **Aletheia vérifie la véracité** des affirmations."
+)
 
 # --- BARRE LATÉRALE (Configuration) ---
 st.sidebar.header("⚙️ Configuration du Modèle")
@@ -25,20 +27,27 @@ available_llms = get_available_llms()
 
 # 2. Sélecteurs utilisateur
 selected_llm = st.sidebar.selectbox("Modèle LLM", options=available_llms)
-selected_temp = st.sidebar.slider("Température", min_value=0.0, max_value=1.0, value=0.7, step=0.1)
+selected_temp = st.sidebar.slider(
+    "Température", min_value=0.0, max_value=1.0, value=0.7, step=0.1
+)
 
 st.sidebar.markdown("---")
-st.sidebar.info("La température contrôle la créativité du modèle. Une valeur proche de 0 donne des réponses plus factuelles, proche de 1 plus créatives (mais avec plus de risques d'hallucinations).")
+st.sidebar.info(
+    "La température contrôle la créativité du modèle. Une valeur proche de 0 donne des réponses plus factuelles, proche de 1 plus créatives (mais avec plus de risques d'hallucinations)."
+)
 
 # --- ZONE PRINCIPALE ---
-question_input = st.text_area("Votre question :", placeholder="Ex: Pourquoi le ciel est-il bleu ?")
+question_input = st.text_area(
+    "Votre question :", placeholder="Ex: Pourquoi le ciel est-il bleu ?"
+)
 
 if st.button("Générer & Vérifier", type="primary"):
     if not question_input.strip():
         st.warning("Veuillez entrer une question.")
     else:
-        with st.spinner(f"Interrogation de {selected_llm} et vérification des faits en cours... ⏳"):
-
+        with st.spinner(
+            f"Interrogation de {selected_llm} et vérification des faits en cours... ⏳"
+        ):
             result = check_hallucinations(question_input, selected_llm, selected_temp)
 
             if result:
@@ -52,7 +61,9 @@ if st.button("Générer & Vérifier", type="primary"):
                     st.subheader("🤖 Réponse du Modèle")
                     st.info(result.get("full_llm_answer", "Aucune réponse générée."))
 
-                    st.caption(f"**Modèle utilisé :** {result['llm_used']['name']} (Température: {result['llm_used']['temperature']})")
+                    st.caption(
+                        f"**Modèle utilisé :** {result['llm_used']['name']} (Température: {result['llm_used']['temperature']})"
+                    )
 
                 # Colonne 2 : Le fact-checking
                 with col2:
@@ -76,13 +87,22 @@ if st.button("Générer & Vérifier", type="primary"):
                                 border_color = "border-left: 5px solid #ffc107;"
 
                             # Affichage stylisé avec HTML/Markdown
-                            st.markdown(f"""
+                            st.markdown(
+                                f"""
                             <div style="{border_color} padding: 10px; background-color: #1e1e1e; border-radius: 5px; margin-bottom: 10px;">
-                                <strong>{icon_color} Affirmation :</strong> {claim.get('claim_text')}
+                                <strong>{icon_color} Affirmation :</strong> {claim.get("claim_text")}
                             </div>
-                            """, unsafe_allow_html=True)
+                            """,
+                                unsafe_allow_html=True,
+                            )
 
                             # Détails dans un expander (accordéon) pour garder l'UI propre
-                            with st.expander(f"Détails de l'analyse (Score: {claim.get('fusion_score', 0):.2f})"):
-                                st.markdown(f"**Source de preuve :** `{claim.get('evidence_source')}`")
-                                st.markdown(f"**Preuve :** {claim.get('evidence_text')}")
+                            with st.expander(
+                                f"Détails de l'analyse (Score: {claim.get('fusion_score', 0):.2f})"
+                            ):
+                                st.markdown(
+                                    f"**Source de preuve :** `{claim.get('evidence_source')}`"
+                                )
+                                st.markdown(
+                                    f"**Preuve :** {claim.get('evidence_text')}"
+                                )
