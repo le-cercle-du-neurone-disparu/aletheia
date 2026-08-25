@@ -1,7 +1,7 @@
 # ==============================================================================
 # 🧹 LINT
 # ==============================================================================
-# Python : ruff (dans requirements_dev.txt, cf. pyproject.toml pour la config).
+# Python : ruff (dans requirements.txt, cf. pyproject.toml pour la config).
 # Shell : shellcheck — outil externe, pas installable via pip.
 #   Debian/Ubuntu/WSL : sudo apt-get install shellcheck
 #   macOS             : brew install shellcheck

@@ -16,7 +16,7 @@ jobs:
           python-version: "3.14"
 
       - name: Installe les dépendances de lint
-        run: pip install -r requirements_dev.txt
+        run: pip install -r requirements.txt
 
       - name: lint
         run: make lint
