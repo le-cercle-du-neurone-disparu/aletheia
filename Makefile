@@ -13,14 +13,22 @@ help: ## Affiche ce menu d'aide
 # 🧰 SETUP
 # ==============================================================================
 
+PYTHON_VERSION=3.14.6
+
+VENV_NAME=aletheia-env
+
 local_setup: ## Crée le venv, installe les dépendances, génère .env si besoin
-	@echo "📦 Création du venv (.venv)..."
-	@python3 -m venv .venv
-	@echo "🛠️ Installation des dépendances..."
-	@.venv/bin/pip install --upgrade pip -q
-	@.venv/bin/pip install -r requirements.txt -q
+	@echo "🐍 Installing Python $(PYTHON_VERSION)..."
+	pyenv install -s $(PYTHON_VERSION)
+	@echo "📦 Creating virtual environment $(VENV_NAME)..."
+	pyenv virtualenv $(PYTHON_VERSION) $(VENV_NAME) || true
+	@echo "🔗 Linking virtual environment to current folder..."
+	pyenv local $(VENV_NAME)
+	@echo "🛠️ Upgrading pip..."
+	pip install --upgrade pip
+	@echo "📚 Installing project and dependencies in editable mode..."
+	pip install -e .
 	@bash scripts/setup_env.sh
-	@echo "✅ Setup terminé. Active le venv : source .venv/bin/activate"
 
 # ==============================================================================
 # ▶️ RUN (local uniquement pour le moment)
