@@ -3,9 +3,8 @@ Page de prédiction — Aletheia.
 """
 
 import streamlit as st
-import pandas as pd
-import plotly.express as px
-from utils.api_client import get_available_llms, check_hallucinations
+
+from utils.api_client import check_hallucinations, get_available_llms
 
 # ==============================================================================
 # CONFIGURATION

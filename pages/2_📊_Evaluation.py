@@ -2,10 +2,10 @@
 Page d'évaluation par lot (Benchmark) — Aletheia.
 """
 
-import streamlit as st
-import requests
 import pandas as pd
 import plotly.express as px
+import streamlit as st
+
 from utils.api_client import get_available_llms, run_evaluation
 
 # ==============================================================================
