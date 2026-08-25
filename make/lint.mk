@@ -11,10 +11,10 @@ lint: ## Vérifie tout (Python + shell), ne modifie rien
 		echo "❌ shellcheck n'est pas installé. Debian/Ubuntu/WSL : sudo apt-get install shellcheck — macOS : brew install shellcheck"; \
 		exit 1; \
 	}
-	ruff check berlue/ tests/
-	ruff format --check berlue/ tests/
+	ruff check pages/
+	ruff format --check pages/
 	shellcheck -x scripts/*.sh
 
 lint_format: ## Corrige et formate automatiquement le code Python (ruff)
-	ruff check --fix berlue/ tests/
-	ruff format berlue/ tests/
+	ruff check --fix pages/
+	ruff format pages/
