@@ -1,0 +1,30 @@
+[
+  {
+    "name": "xavinsky",
+    "role": "Lead Data Scientist",
+    "photo_url": "https://avatars.githubusercontent.com/u/1135247",
+    "description": "Architecte DevOps Senior avec 27 ans d'expérience, j'ai traversé plusieurs mutations technologiques — des débuts d'internet au cloud — au sein de grandes organisations comme Cap Gemini, France Télécom et Webedia, mais aussi en environnement startup. Conception d'infrastructures complexes, standardisation des pratiques DevOps à l'échelle d'un groupe media, développement d'outils internes. Habitué aux rôles transverses entre équipes dev, ops et métier, je privilégie les solutions open source et maîtrisables. Aujourd'hui spécialisé sur l'IaC cloud (GCP, Terraform, OpenTofu), la CI/CD (GitLab), j'interviens aussi bien sur des sujets d'architecture, de sécurité, de data ou d'intégration.",
+    "github_url": "https://github.com/xavinsky"
+  },
+  {
+    "name": "JustVNRR",
+    "role": "Machine Learning Engineer",
+    "photo_url": "https://avatars.githubusercontent.com/u/86288710",
+    "description": "Hi, I'm Lionel. I hold an engineering degree and a PhD in Acoustics, complemented by a foundation in software development. Throughout my academic and engineering journey, I've always loved tackling complex problems. I am highly motivated to join this bootcamp to master Data Science and AI, allowing me to build smarter, data-driven solutions for real-world challenges.",
+    "github_url": ""
+  },
+  {
+    "name": "maximedrs1-art",
+    "role": "Randomised AirHeaded Generator",
+    "photo_url": "https://avatars.githubusercontent.com/u/266259331",
+    "description": "Bonjour, ancien.ne pilot.e de ligne en transition, je recherche activement un poste à base de RAG (Rien À Gérer).",
+    "github_url": "https://github.com/maximedrs1-art"
+  },
+  {
+    "name": "RassoulTOP",
+    "role": "Machine Learning Engineer",
+    "photo_url": "https://avatars.githubusercontent.com/u/74977943",
+    "description": "J'ai eu un Master en Modélisation Statistique et Stochastique en 2021. Après pour des soucis administratifs, je me suis converti en agent de sécurité privée. Aujourd'hui, je compte travailler dans le domaine des data. C’est ce qui explique mon inscription au wagon.",
+    "github_url": "https://github.com/RassoulTOP"
+  }
+]
