@@ -35,4 +35,4 @@ local_setup: ## Crée le venv, installe les dépendances, génère .env si besoi
 # ==============================================================================
 
 run_app: ## Lance l'app Streamlit en local
-	@.venv/bin/streamlit run streamlit_app.py
+	-@streamlit run 🏠_Accueil.py
