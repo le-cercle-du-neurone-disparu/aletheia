@@ -17,7 +17,7 @@ st.set_page_config(
     page_title="Aletheia | Plateforme de Détection d'Hallucinations",
     page_icon="🏛️",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="expanded",
 )
 
 # ==============================================================================
@@ -30,6 +30,7 @@ API_HEALTH_URL = f"{API_URL}/"
 # FONCTIONS DE VÉRIFICATION ET DE LANCEMENT DE L'API
 # ==============================================================================
 
+
 def check_api_health():
     """
     Vérifie si l'API Berlue est accessible.
@@ -41,16 +42,18 @@ def check_api_health():
     except (requests.ConnectionError, requests.Timeout):
         return False
 
+
 def is_port_in_use(port=8000):
     """
     Vérifie si le port est déjà utilisé.
     """
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         try:
-            s.bind(('localhost', port))
+            s.bind(("localhost", port))
             return False
         except OSError:
             return True
+
 
 def open_terminal_and_run_command():
     """
@@ -58,26 +61,23 @@ def open_terminal_and_run_command():
     """
     # Chemin vers le projet
     project_path = "/opt/wagon/src/berlue"
-    
+
     # Déterminer le système d'exploitation
     system = platform.system()
-    
+
     # Commandes à exécuter
     if system == "Windows":
         # Windows - utilise cmd
-        cmd = [
-            "start", "cmd", "/k",
-            f"cd /d {project_path} && make run_api"
-        ]
+        cmd = ["start", "cmd", "/k", f"cd /d {project_path} && make run_api"]
         # Alternative avec PowerShell
         # cmd = ["powershell", "-Command", f"Start-Process cmd -ArgumentList '/k cd {project_path} && make run_api'"]
-        
+
     elif system == "Darwin":  # macOS
         # macOS - utilise Terminal.app
         cmd = [
-            "osascript", 
-            "-e", 
-            f'tell application "Terminal" to do script "cd {project_path} && make run_api"'
+            "osascript",
+            "-e",
+            f'tell application "Terminal" to do script "cd {project_path} && make run_api"',
         ]
         # Alternative avec iTerm2 si disponible
         # cmd = [
@@ -85,37 +85,71 @@ def open_terminal_and_run_command():
         #     "-e",
         #     f'tell application "iTerm" to create window with default profile command "cd {project_path} && make run_api"'
         # ]
-        
+
     else:  # Linux
         # Linux - essaie plusieurs terminaux
         terminals = [
-            ["gnome-terminal", "--", "bash", "-c", f"cd {project_path} && make run_api; exec bash"],
-            ["konsole", "-e", "bash", "-c", f"cd {project_path} && make run_api; exec bash"],
-            ["xterm", "-e", "bash", "-c", f"cd {project_path} && make run_api; exec bash"],
-            ["xfce4-terminal", "--command", f"bash -c 'cd {project_path} && make run_api; exec bash'"],
-            ["terminator", "-x", "bash", "-c", f"cd {project_path} && make run_api; exec bash"]
+            [
+                "gnome-terminal",
+                "--",
+                "bash",
+                "-c",
+                f"cd {project_path} && make run_api; exec bash",
+            ],
+            [
+                "konsole",
+                "-e",
+                "bash",
+                "-c",
+                f"cd {project_path} && make run_api; exec bash",
+            ],
+            [
+                "xterm",
+                "-e",
+                "bash",
+                "-c",
+                f"cd {project_path} && make run_api; exec bash",
+            ],
+            [
+                "xfce4-terminal",
+                "--command",
+                f"bash -c 'cd {project_path} && make run_api; exec bash'",
+            ],
+            [
+                "terminator",
+                "-x",
+                "bash",
+                "-c",
+                f"cd {project_path} && make run_api; exec bash",
+            ],
         ]
-        
+
         for terminal_cmd in terminals:
             try:
-                subprocess.Popen(terminal_cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                subprocess.Popen(
+                    terminal_cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+                )
                 return True, f"Terminal ouvert avec {terminal_cmd[0]}"
             except FileNotFoundError:
                 continue
-        
+
         return False, "Aucun terminal trouvé sur ce système Linux"
-    
+
     try:
         # Exécuter la commande pour ouvrir le terminal
         if system == "Windows" or system == "Darwin":
             subprocess.Popen(cmd, shell=True)
         else:
             subprocess.Popen(cmd)
-        
-        return True, f"Terminal ouvert. Lancement de l'API dans le dossier {project_path}"
-    
-    except Exception as e:
+
+        return (
+            True,
+            f"Terminal ouvert. Lancement de l'API dans le dossier {project_path}",
+        )
+
+    except OSError as e:
         return False, f"Erreur lors de l'ouverture du terminal : {e!s}"
+
 
 def open_terminal_with_detailed_commands():
     """
@@ -123,65 +157,77 @@ def open_terminal_with_detailed_commands():
     """
     system = platform.system()
     project_path = "/opt/wagon/src/berlue"
-    
-    # Script avec les commandes complètes
-    commands = f"""
-echo "🚀 Lancement de l'API Berlue..."
-echo "📂 Répertoire : {project_path}"
 
-# Se déplacer dans le répertoire du projet
-cd {project_path}
-echo "✅ Dans le répertoire : $(pwd)"
-
-# Afficher le contenu pour vérifier
-echo "📋 Contenu du répertoire :"
-ls -la
-
-# Lancer l'API avec make
-echo "🚀 make run_api..."
-make run_api
-"""
-    
     if system == "Windows":
         # Windows
         cmd = [
-            "start", "cmd", "/k",
-            f"cd /d {project_path} && echo Lancement de l'API Berlue... && make run_api"
+            "start",
+            "cmd",
+            "/k",
+            f"cd /d {project_path} && echo Lancement de l'API Berlue... && make run_api",
         ]
         return subprocess.Popen(cmd, shell=True)
-        
+
     elif system == "Darwin":  # macOS
         # macOS avec Terminal.app
         cmd = [
             "osascript",
             "-e",
-            f'tell application "Terminal" to do script "cd {project_path} && echo \\"🚀 Lancement de l\\\'API Berlue...\\" && echo \\"📂 Répertoire : $(pwd)\\" && make run_api"'
+            f'tell application "Terminal" to do script "cd {project_path} && echo \\"🚀 Lancement de l\\\'API Berlue...\\" && echo \\"📂 Répertoire : $(pwd)\\" && make run_api"',
         ]
         return subprocess.Popen(cmd, shell=True)
-        
+
     else:  # Linux
         # Linux
-        cmd = ["gnome-terminal", "--", "bash", "-c", f"cd {project_path} && echo '🚀 Lancement de l\\'API Berlue...' && echo '📂 Répertoire : $(pwd)' && make run_api; exec bash"]
-        
+        cmd = [
+            "gnome-terminal",
+            "--",
+            "bash",
+            "-c",
+            f"cd {project_path} && echo '🚀 Lancement de l\\'API Berlue...' && echo '📂 Répertoire : $(pwd)' && make run_api; exec bash",
+        ]
+
         # Essayer différents terminaux
         terminals = [
-            ["gnome-terminal", "--", "bash", "-c", f"cd {project_path} && echo '🚀 Lancement de l\\'API...' && make run_api; exec bash"],
-            ["konsole", "-e", "bash", "-c", f"cd {project_path} && echo '🚀 Lancement de l\\'API...' && make run_api; exec bash"],
-            ["xterm", "-e", "bash", "-c", f"cd {project_path} && echo '🚀 Lancement de l\\'API...' && make run_api; exec bash"]
+            [
+                "gnome-terminal",
+                "--",
+                "bash",
+                "-c",
+                f"cd {project_path} && echo '🚀 Lancement de l\\'API...' && make run_api; exec bash",
+            ],
+            [
+                "konsole",
+                "-e",
+                "bash",
+                "-c",
+                f"cd {project_path} && echo '🚀 Lancement de l\\'API...' && make run_api; exec bash",
+            ],
+            [
+                "xterm",
+                "-e",
+                "bash",
+                "-c",
+                f"cd {project_path} && echo '🚀 Lancement de l\\'API...' && make run_api; exec bash",
+            ],
         ]
-        
+
         for terminal_cmd in terminals:
             try:
-                return subprocess.Popen(terminal_cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                return subprocess.Popen(
+                    terminal_cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+                )
             except FileNotFoundError:
                 continue
-        
+
         return None
+
 
 # ==============================================================================
 # STYLES PERSONNALISÉS
 # ==============================================================================
-st.markdown("""
+st.markdown(
+    """
 <style>
     /* ===== VARIABLES ===== */
     :root {
@@ -715,15 +761,17 @@ st.markdown("""
         }
     }
 </style>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)
 
 # ==============================================================================
 # INITIALISATION DE L'ÉTAT DE SESSION
 # ==============================================================================
-if 'api_launching' not in st.session_state:
+if "api_launching" not in st.session_state:
     st.session_state.api_launching = False
 
-if 'api_launch_result' not in st.session_state:
+if "api_launch_result" not in st.session_state:
     st.session_state.api_launch_result = None
 
 # ==============================================================================
@@ -731,7 +779,8 @@ if 'api_launch_result' not in st.session_state:
 # ==============================================================================
 
 # --- HERO SECTION ---
-st.markdown("""
+st.markdown(
+    """
 <div class="hero-section">
     <h1>🏛️ Aletheia</h1>
     <div class="subtitle">Le Moteur de Vérité pour les LLMs</div>
@@ -742,7 +791,9 @@ st.markdown("""
         <span class="hero-badge">🤖 Llama · Mistral</span>
     </div>
 </div>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)
 
 # ==============================================================================
 # VÉRIFICATION DE L'API BERLUE
@@ -755,7 +806,9 @@ api_online = check_api_health()
 if api_online:
     status_icon = "🟢"
     status_title = "API Berlue connectée"
-    status_desc = "L'API est opérationnelle. Vous pouvez utiliser toutes les fonctionnalités."
+    status_desc = (
+        "L'API est opérationnelle. Vous pouvez utiliser toutes les fonctionnalités."
+    )
     status_class = "status-success"
     status_dot = "online"
 elif is_port_in_use(8000):
@@ -772,7 +825,8 @@ else:
     status_dot = "offline"
 
 # Afficher la carte de statut
-st.markdown(f"""
+st.markdown(
+    f"""
 <div class="api-status-card {status_class}">
     <div class="api-status-left">
         <div class="api-status-icon">{status_icon}</div>
@@ -785,41 +839,59 @@ st.markdown(f"""
         </div>
     </div>
     <div class="api-status-right">
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)
 
 if api_online:
     # API en ligne - bouton pour vérifier/rafraîchir
-    st.markdown("""
+    st.markdown(
+        """
         <button class="btn-refresh" onclick="location.reload()">🔄 Rafraîchir</button>
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )
 else:
     # API hors ligne - bouton pour lancer
-    if st.button("🚀 Lancer l'API Berlue", key="launch_api_btn", use_container_width=False):
+    if st.button(
+        "🚀 Lancer l'API Berlue", key="launch_api_btn", use_container_width=False
+    ):
         # Ouvrir le terminal avec les commandes
         success, message = open_terminal_and_run_command()
-        
+
         if success:
             st.success(f"✅ {message}")
-            st.info("⏳ Attendez quelques secondes que l'API démarre, puis cliquez sur 'Rafraîchir'")
+            st.info(
+                "⏳ Attendez quelques secondes que l'API démarre, puis cliquez sur 'Rafraîchir'"
+            )
         else:
             st.error(f"❌ {message}")
-            st.info("💡 Vous pouvez aussi lancer manuellement l'API avec :\n```bash\ncd /opt/wagon/src/berlue && make run_api\n```")
-    
-    # Bouton de rafraîchissement
-    st.markdown("""
-        <button class="btn-refresh" onclick="location.reload()">🔄 Rafraîchir</button>
-    """, unsafe_allow_html=True)
+            st.info(
+                "💡 Vous pouvez aussi lancer manuellement l'API avec :\n```bash\ncd /opt/wagon/src/berlue && make run_api\n```"
+            )
 
-st.markdown("""
+    # Bouton de rafraîchissement
+    st.markdown(
+        """
+        <button class="btn-refresh" onclick="location.reload()">🔄 Rafraîchir</button>
+    """,
+        unsafe_allow_html=True,
+    )
+
+st.markdown(
+    """
     </div>
 </div>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)
 
 # Si l'API n'est pas disponible, désactiver les liens vers les autres pages
 feature_disabled = not api_online
 
 # --- STATISTIQUES ---
-st.markdown("""
+st.markdown(
+    """
 <div class="stats-grid">
     <div class="stat-card">
         <div class="stat-number">4</div>
@@ -838,26 +910,37 @@ st.markdown("""
         <div class="stat-label">Questions possibles</div>
     </div>
 </div>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)
 
 st.divider()
 
 # --- DESCRIPTION ---
-st.markdown("""
+st.markdown(
+    """
 <p style="color: #a0aec0; font-size: 1.1rem; text-align: center; max-width: 800px; margin: 0 auto;">
     <strong>Aletheia</strong> est votre tableau de bord interactif pour auditer, tester et évaluer 
     les grands modèles de langage (LLMs). Grâce au moteur de fact-checking <strong>Berlue</strong> 
     en arrière-plan, cette plateforme vous permet de mesurer la fiabilité des réponses générées.
 </p>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)
 
 st.divider()
 
 # --- PROCESSUS BERLUE ---
-st.markdown('<div class="section-title">⚡ Le Processus Berlue</div>', unsafe_allow_html=True)
-st.markdown('<div class="section-subtitle">Vérification d\'hallucinations en 4 étapes</div>', unsafe_allow_html=True)
+st.markdown(
+    '<div class="section-title">⚡ Le Processus Berlue</div>', unsafe_allow_html=True
+)
+st.markdown(
+    '<div class="section-subtitle">Vérification d\'hallucinations en 4 étapes</div>',
+    unsafe_allow_html=True,
+)
 
-st.markdown("""
+st.markdown(
+    """
 <div class="process-grid">
     <div class="process-step">
         <div class="step-number">1</div>
@@ -884,18 +967,25 @@ st.markdown("""
         <div class="step-desc">Surlignage vert/orange/rouge avec preuves</div>
     </div>
 </div>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)
 
 st.divider()
 
 # --- FEATURES ---
-st.markdown('<div class="section-title">🚀 Explorez Aletheia</div>', unsafe_allow_html=True)
+st.markdown(
+    '<div class="section-title">🚀 Explorez Aletheia</div>', unsafe_allow_html=True
+)
 
 # Désactiver les liens si l'API n'est pas disponible
 if feature_disabled:
-    st.warning("⚠️ L'API Berlue n'est pas disponible. Lancez l'API ci-dessus pour accéder aux fonctionnalités de prédiction et d'évaluation.")
+    st.warning(
+        "⚠️ L'API Berlue n'est pas disponible. Lancez l'API ci-dessus pour accéder aux fonctionnalités de prédiction et d'évaluation."
+    )
 
-st.markdown(f"""
+st.markdown(
+    f"""
 <div class="feature-grid">
     <div class="feature-card">
         <div class="icon">🔎</div>
@@ -907,8 +997,8 @@ st.markdown(f"""
             <li>Identifiez les hallucinations avec code couleur</li>
             <li>Vérifiez les sources utilisées pour chaque affirmation</li>
         </ul>
-        <a href="/1_🔎_Prediction" target="_self" class="btn-primary {'btn-disabled' if feature_disabled else ''}" {'style="pointer-events: none; opacity: 0.5;"' if feature_disabled else ''}>
-            {'🔒 ' if feature_disabled else '🔍 '}Accéder à l'Explorateur
+        <a href="/1_🔎_Prediction" target="_self" class="btn-primary {"btn-disabled" if feature_disabled else ""}" {'style="pointer-events: none; opacity: 0.5;"' if feature_disabled else ""}>
+            {"🔒 " if feature_disabled else "🔍 "}Accéder à l'Explorateur
         </a>
     </div>
     <div class="feature-card">
@@ -921,19 +1011,24 @@ st.markdown(f"""
             <li>Visualisez les matrices de confusion (2×3)</li>
             <li>Analysez les performances globales</li>
         </ul>
-        <a href="/2_📊_Evaluation" target="_self" class="btn-primary {'btn-disabled' if feature_disabled else ''}" {'style="pointer-events: none; opacity: 0.5;"' if feature_disabled else ''}>
-            {'🔒 ' if feature_disabled else '📈 '}Accéder au Benchmark
+        <a href="/2_📊_Evaluation" target="_self" class="btn-primary {"btn-disabled" if feature_disabled else ""}" {'style="pointer-events: none; opacity: 0.5;"' if feature_disabled else ""}>
+            {"🔒 " if feature_disabled else "📈 "}Accéder au Benchmark
         </a>
     </div>
 </div>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)
 
 st.divider()
 
 # --- À PROPOS DU PROJET ---
-st.markdown('<div class="section-title">📖 À propos du projet</div>', unsafe_allow_html=True)
+st.markdown(
+    '<div class="section-title">📖 À propos du projet</div>', unsafe_allow_html=True
+)
 
-st.markdown("""
+st.markdown(
+    """
 <div class="about-grid">
     <div class="about-item">
         <div class="label">Moteur de vérification</div>
@@ -952,10 +1047,13 @@ st.markdown("""
         <div class="value">Llama · Mistral <span class="badge">+ en cours</span></div>
     </div>
 </div>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)
 
 # --- FOOTER ---
-st.markdown("""
+st.markdown(
+    """
 <div class="footer">
     <div class="disclaimer">
         ⚠️ Les résultats sont indicatifs et ne remplacent pas une vérification humaine.
@@ -964,4 +1062,6 @@ st.markdown("""
         🚀 Propulsé par FastAPI &amp; Streamlit | Projet Berlue © 2026
     </div>
 </div>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)

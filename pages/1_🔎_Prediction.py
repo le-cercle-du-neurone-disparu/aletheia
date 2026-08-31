@@ -3,7 +3,7 @@ Page de prédiction — Aletheia.
 Avec présentation du processus Berlue.
 """
 
-
+import requests
 import streamlit as st
 
 from utils.api_client import API_URL, check_hallucinations, get_available_llms
@@ -16,7 +16,8 @@ st.set_page_config(page_title="Prédiction | Aletheia", page_icon="🔎", layout
 # ==============================================================================
 # STYLES
 # ==============================================================================
-st.markdown("""
+st.markdown(
+    """
 <style>
     :root {
         --primary: #667eea;
@@ -110,7 +111,9 @@ st.markdown("""
         flex-shrink: 0;
     }
 </style>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)
 
 # ==============================================================================
 # INTERFACE
@@ -126,7 +129,7 @@ st.divider()
 # --- SIDEBAR ---
 with st.sidebar:
     st.header("⚙️ Configuration")
-    
+
     # Status backend
     try:
         available_llms = get_available_llms()
@@ -134,24 +137,24 @@ with st.sidebar:
             st.success("✅ Backend opérationnel")
         else:
             st.warning("⚠️ Aucun modèle disponible")
-    except Exception:
+    except requests.exceptions.RequestException:
         st.error("❌ Erreur de connexion")
         available_llms = ["llama-2-7b", "mistral-7b"]
-    
+
     st.divider()
-    
+
     # Sélecteurs
     selected_llm = st.selectbox("🤖 Modèle LLM", options=available_llms)
-    
+
     selected_temp = st.slider(
         "🌡️ Température",
         min_value=0.0,
         max_value=1.0,
         value=0.3,
         step=0.05,
-        help="0 = factuel · 1 = créatif"
+        help="0 = factuel · 1 = créatif",
     )
-    
+
     # Indicateur
     if selected_temp < 0.3:
         st.info("🔵 Mode factuel — réponses stables")
@@ -159,11 +162,12 @@ with st.sidebar:
         st.info("🟡 Mode équilibré")
     else:
         st.warning("🔴 Mode créatif — risque d'hallucinations")
-    
+
     st.divider()
-    
+
     # Processus Berlue
-    st.markdown("""
+    st.markdown(
+        """
     <div class="process-mini">
         <div style="font-weight: 600; color: var(--text-primary); margin-bottom: 0.5rem;">
             ⚡ Processus Berlue
@@ -173,8 +177,10 @@ with st.sidebar:
         <div class="step"><span class="num">3</span> Auto-cohérence (SelfCheckGPT)</div>
         <div class="step"><span class="num">4</span> Score de confiance</div>
     </div>
-    """, unsafe_allow_html=True)
-    
+    """,
+        unsafe_allow_html=True,
+    )
+
     st.caption(f"🔗 API: {API_URL}")
 
 # --- ZONE PRINCIPALE ---
@@ -199,7 +205,7 @@ question_input = st.text_area(
     "📝 Votre question :",
     value=st.session_state.get("question", ""),
     placeholder="Ex: Pourquoi le ciel est-il bleu ?",
-    height=80
+    height=80,
 )
 
 # Bouton
@@ -209,53 +215,77 @@ if st.button("🚀 Générer & Vérifier", type="primary", use_container_width=T
     else:
         with st.spinner(f"🔄 {selected_llm} en cours d'analyse..."):
             try:
-                result = check_hallucinations(question_input, selected_llm, selected_temp)
-                
+                result = check_hallucinations(
+                    question_input, selected_llm, selected_temp
+                )
+
                 if result:
                     st.success("✅ Analyse terminée")
                     st.balloons()
-                    
+
                     # Métadonnées
-                    st.caption(f"📊 {result.get('llm_used', {}).get('name', 'N/A')} · "
-                              f"🌡️ {result.get('llm_used', {}).get('temperature', 'N/A')}")
-                    
+                    st.caption(
+                        f"📊 {result.get('llm_used', {}).get('name', 'N/A')} · "
+                        f"🌡️ {result.get('llm_used', {}).get('temperature', 'N/A')}"
+                    )
+
                     col1, col2 = st.columns([1, 1.5])
-                    
+
                     # Réponse
                     with col1:
                         st.subheader("🤖 Réponse du Modèle")
                         with st.container(border=True):
-                            st.markdown(result.get("full_llm_answer", "Aucune réponse générée."))
-                    
+                            st.markdown(
+                                result.get("full_llm_answer", "Aucune réponse générée.")
+                            )
+
                     # Claims
                     with col2:
                         st.subheader("🛡️ Vérification des Affirmations")
-                        
+
                         claims = result.get("claims", [])
-                        
+
                         if not claims:
                             st.info("ℹ️ Aucune affirmation vérifiable trouvée.")
                         else:
                             # Stats
                             total = len(claims)
-                            verified = sum(1 for c in claims if c.get("status") == "green")
-                            hallucinated = sum(1 for c in claims if c.get("status") == "red")
-                            uncertain = sum(1 for c in claims if c.get("status") == "unknown")
-                            
+                            verified = sum(
+                                1 for c in claims if c.get("status") == "green"
+                            )
+                            hallucinated = sum(
+                                1 for c in claims if c.get("status") == "red"
+                            )
+                            uncertain = sum(
+                                1 for c in claims if c.get("status") == "unknown"
+                            )
+
                             col_ok, col_ko, col_unk = st.columns(3)
                             with col_ok:
-                                st.metric("✅ Vrai", verified, delta=f"{verified/total*100:.0f}%")
+                                st.metric(
+                                    "✅ Vrai",
+                                    verified,
+                                    delta=f"{verified / total * 100:.0f}%",
+                                )
                             with col_ko:
-                                st.metric("❌ Hallucination", hallucinated, delta=f"{hallucinated/total*100:.0f}%")
+                                st.metric(
+                                    "❌ Hallucination",
+                                    hallucinated,
+                                    delta=f"{hallucinated / total * 100:.0f}%",
+                                )
                             with col_unk:
-                                st.metric("⚠️ Incertain", uncertain, delta=f"{uncertain/total*100:.0f}%")
-                            
+                                st.metric(
+                                    "⚠️ Incertain",
+                                    uncertain,
+                                    delta=f"{uncertain / total * 100:.0f}%",
+                                )
+
                             st.divider()
-                            
+
                             # Affichage
                             for idx, claim in enumerate(claims, 1):
                                 status = claim.get("status", "unknown").lower()
-                                
+
                                 if status == "green":
                                     color_class = "claim-green"
                                     badge = '<span class="status-badge badge-green">✅ Vrai</span>'
@@ -265,8 +295,9 @@ if st.button("🚀 Générer & Vérifier", type="primary", use_container_width=T
                                 else:
                                     color_class = "claim-yellow"
                                     badge = '<span class="status-badge badge-yellow">⚠️ Incertain</span>'
-                                
-                                st.markdown(f"""
+
+                                st.markdown(
+                                    f"""
                                 <div class="claim-card {color_class}">
                                     <div class="claim-header">
                                         <span style="font-weight: 600; color: var(--text-secondary); font-size: 0.85rem;">
@@ -276,16 +307,26 @@ if st.button("🚀 Générer & Vérifier", type="primary", use_container_width=T
                                     </div>
                                     <div class="claim-text">{claim.get("claim_text", "N/A")}</div>
                                 </div>
-                                """, unsafe_allow_html=True)
-                                
-                                with st.expander(f"📋 Détails (Score: {claim.get('fusion_score', 0):.2f})"):
-                                    st.markdown(f"**Source :** `{claim.get('evidence_source', 'N/A')}`")
-                                    st.markdown(f"**Preuve :** {claim.get('evidence_text', 'N/A')}")
-                                    st.markdown(f"**Score de confiance :** {claim.get('fusion_score', 0):.2f}")
+                                """,
+                                    unsafe_allow_html=True,
+                                )
+
+                                with st.expander(
+                                    f"📋 Détails (Score: {claim.get('fusion_score', 0):.2f})"
+                                ):
+                                    st.markdown(
+                                        f"**Source :** `{claim.get('evidence_source', 'N/A')}`"
+                                    )
+                                    st.markdown(
+                                        f"**Preuve :** {claim.get('evidence_text', 'N/A')}"
+                                    )
+                                    st.markdown(
+                                        f"**Score de confiance :** {claim.get('fusion_score', 0):.2f}"
+                                    )
                 else:
                     st.error("❌ L'analyse a échoué.")
-                    
-            except Exception as e:
+
+            except Exception as e:  # noqa: BLE001 -- filet de sécurité UI, couvre aussi les erreurs de rendu
                 st.error(f"❌ Erreur: {e!s}")
 
 # Footer
