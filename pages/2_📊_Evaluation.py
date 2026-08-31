@@ -3,12 +3,12 @@ Page d'évaluation — Aletheia.
 Avec présentation des datasets HaluEval et TruthfulQA.
 """
 
+from datetime import datetime
+
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
-from datetime import datetime
-from typing import List, Dict
 
 from utils.api_client import get_available_llms, run_evaluation
 
@@ -151,7 +151,7 @@ def calculate_metrics(matrix: dict) -> dict:
     return {"accuracy": accuracy, "precision": precision, "recall": recall, "f1": f1,
             "tp": tp, "tn": tn, "fp": fp, "fn": fn}
 
-def aggregate_metrics(metrics_list: List[Dict]) -> Dict:
+def aggregate_metrics(metrics_list: list[dict]) -> dict:
     if not metrics_list:
         return {}
     agg = {"accuracy": 0, "precision": 0, "recall": 0, "f1": 0, "count": 0}
@@ -176,7 +176,7 @@ def get_dataset_badge(option: str) -> str:
     }
     return badges.get(option, "")
 
-def get_datasets_from_option(option: str) -> List[str]:
+def get_datasets_from_option(option: str) -> list[str]:
     if option == "HaluEval":
         return ["HaluEval"]
     elif option == "TruthfulQA":
@@ -556,4 +556,4 @@ if st.button("🚀 Lancer le Benchmark", type="primary", use_container_width=Tru
             st.caption("💡 Les résultats sont basés sur les échantillons testés")
             
         except Exception as e:
-            st.error(f"❌ Erreur: {str(e)}")
+            st.error(f"❌ Erreur: {e!s}")

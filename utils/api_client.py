@@ -4,8 +4,9 @@ le repo `berlue` pour le détail des routes/schémas).
 """
 
 import os
-import streamlit as st
+
 import requests
+import streamlit as st
 from dotenv import load_dotenv
 
 load_dotenv()

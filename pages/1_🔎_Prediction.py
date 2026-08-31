@@ -3,10 +3,10 @@ Page de prédiction — Aletheia.
 Avec présentation du processus Berlue.
 """
 
-import streamlit as st
-from datetime import datetime
 
-from utils.api_client import check_hallucinations, get_available_llms, API_URL
+import streamlit as st
+
+from utils.api_client import API_URL, check_hallucinations, get_available_llms
 
 # ==============================================================================
 # CONFIGURATION
@@ -134,8 +134,8 @@ with st.sidebar:
             st.success("✅ Backend opérationnel")
         else:
             st.warning("⚠️ Aucun modèle disponible")
-    except Exception as e:
-        st.error(f"❌ Erreur de connexion")
+    except Exception:
+        st.error("❌ Erreur de connexion")
         available_llms = ["llama-2-7b", "mistral-7b"]
     
     st.divider()
@@ -286,7 +286,7 @@ if st.button("🚀 Générer & Vérifier", type="primary", use_container_width=T
                     st.error("❌ L'analyse a échoué.")
                     
             except Exception as e:
-                st.error(f"❌ Erreur: {str(e)}")
+                st.error(f"❌ Erreur: {e!s}")
 
 # Footer
 st.divider()

@@ -3,15 +3,12 @@ Point d'entrée Streamlit — Aletheia (Page d'accueil).
 Présentation complète du projet Berlue.
 """
 
-import streamlit as st
-from datetime import datetime
-import requests
-import subprocess
-import os
-import sys
-import time
-import socket
 import platform
+import socket
+import subprocess
+
+import requests
+import streamlit as st
 
 # ==============================================================================
 # CONFIGURATION
@@ -52,7 +49,7 @@ def is_port_in_use(port=8000):
         try:
             s.bind(('localhost', port))
             return False
-        except socket.error:
+        except OSError:
             return True
 
 def open_terminal_and_run_command():
@@ -110,9 +107,7 @@ def open_terminal_and_run_command():
     
     try:
         # Exécuter la commande pour ouvrir le terminal
-        if system == "Windows":
-            subprocess.Popen(cmd, shell=True)
-        elif system == "Darwin":
+        if system == "Windows" or system == "Darwin":
             subprocess.Popen(cmd, shell=True)
         else:
             subprocess.Popen(cmd)
@@ -120,7 +115,7 @@ def open_terminal_and_run_command():
         return True, f"Terminal ouvert. Lancement de l'API dans le dossier {project_path}"
     
     except Exception as e:
-        return False, f"Erreur lors de l'ouverture du terminal : {str(e)}"
+        return False, f"Erreur lors de l'ouverture du terminal : {e!s}"
 
 def open_terminal_with_detailed_commands():
     """
