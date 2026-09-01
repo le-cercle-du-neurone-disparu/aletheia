@@ -1,17 +1,20 @@
 """
 Page d'évaluation — Aletheia.
-Avec présentation des datasets HaluEval et TruthfulQA.
+Recherche et consultation des résultats d'évaluation Berlue déjà calculés
+(cache berlue.evaluation.result_store) — cette page ne déclenche jamais de
+calcul, cf. berlue/docs/evaluation/api.md pour les routes utilisées.
 """
-
-from datetime import datetime
 
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
-import requests
 import streamlit as st
 
-from utils.api_client import get_available_llms, run_evaluation
+from utils.api_client import (
+    get_baseline_evaluation,
+    get_baseline_evaluation_generated,
+    list_evaluated_models,
+)
 
 # ==============================================================================
 # CONFIGURATION
@@ -44,11 +47,11 @@ st.markdown(
         font-size: 0.75rem;
         font-weight: 600;
         color: white;
+        background: linear-gradient(135deg, #4a5568, #2d3748);
     }
     .dataset-badge.halueval { background: linear-gradient(135deg, #48bb78, #38a169); }
     .dataset-badge.truthfulqa { background: linear-gradient(135deg, #ed8936, #dd6b20); }
-    .dataset-badge.combined { background: linear-gradient(135deg, #48bb78, #ed8936); }
-    
+
     .metric-card {
         background: var(--bg-card);
         border: 1px solid var(--border-color);
@@ -73,7 +76,6 @@ st.markdown(
         margin: 0.2rem 0;
     }
     .metric-card .value.green { color: var(--success); }
-    .metric-card .value.purple { color: var(--secondary); }
     .metric-card .baseline {
         color: var(--text-secondary);
         font-size: 0.75rem;
@@ -85,22 +87,15 @@ st.markdown(
     }
     .metric-card .delta.positive { color: var(--success); }
     .metric-card .delta.negative { color: var(--danger); }
-    
-    .dataset-info {
+
+    .scope-info {
         background: var(--bg-card);
         border: 1px solid var(--border-color);
         border-radius: 10px;
-        padding: 1rem;
+        padding: 0.8rem 1rem;
         margin: 0.5rem 0;
-    }
-    .dataset-info .name {
-        font-weight: 600;
-        color: var(--text-primary);
-    }
-    .dataset-info .desc {
-        color: var(--text-secondary);
         font-size: 0.85rem;
-        margin-top: 0.2rem;
+        color: var(--text-secondary);
     }
 </style>
 """,
@@ -108,27 +103,20 @@ st.markdown(
 )
 
 # ==============================================================================
-# FONCTIONS
+# FONCTIONS — calcul/affichage (indépendantes de la source des matrices)
 # ==============================================================================
 
 
-def plot_confusion_heatmap(
-    matrix_data: dict, title: str, color_scale: str
-) -> go.Figure:
-    df = pd.DataFrame(
-        [matrix_data["ground_truth_true"], matrix_data["ground_truth_false"]]
-    )
+def plot_confusion_heatmap(matrix_data: dict, title: str, color_scale: str) -> go.Figure:
+    df = pd.DataFrame([matrix_data["ground_truth_true"], matrix_data["ground_truth_false"]])
 
     df.index = ["✅ Vrai (Réalité)", "❌ Faux (Réalité)"]
     df.columns = ["✅ Prédit Vrai", "⚠️ Indécis", "❌ Prédit Faux"]
 
-    fig = px.imshow(
-        df,
-        text_auto=True,
-        color_continuous_scale=color_scale,
-        title=title,
-        aspect="auto",
-    )
+    # text_auto=False : les valeurs sont dessinées via add_annotation ci-dessous
+    # (contraste blanc/foncé selon la valeur) — text_auto=True superposerait un
+    # second jeu de chiffres par-dessus, illisible (effet de flou/dédoublement).
+    fig = px.imshow(df, text_auto=False, color_continuous_scale=color_scale, title=title, aspect="auto")
     fig.update_layout(
         xaxis_title="Prédiction",
         yaxis_title="Vérité terrain",
@@ -138,19 +126,21 @@ def plot_confusion_heatmap(
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
     )
+    # Badge à fond fixe plutôt qu'un texte dont la couleur s'adapterait à la
+    # case — reste lisible quelle que soit l'intensité de la couleur en
+    # dessous, pas besoin de deviner un seuil de contraste.
     for i in range(len(df)):
         for j in range(len(df.columns)):
-            val = df.iloc[i, j]
             fig.add_annotation(
                 x=j,
                 y=i,
-                text=str(val),
+                text=str(df.iloc[i, j]),
                 showarrow=False,
-                font={
-                    "size": 18,
-                    "color": "white" if val > 20 else "#2d3748",
-                    "weight": 700,
-                },
+                font={"size": 16, "color": "#1a202c", "weight": 700},
+                bgcolor="rgba(255, 255, 255, 0.88)",
+                bordercolor="rgba(0, 0, 0, 0.15)",
+                borderwidth=1,
+                borderpad=4,
             )
     return fig
 
@@ -165,11 +155,7 @@ def calculate_metrics(matrix: dict) -> dict:
     accuracy = (tp + tn) / total if total > 0 else 0
     precision = tp / (tp + fp) if (tp + fp) > 0 else 0
     recall = tp / (tp + fn) if (tp + fn) > 0 else 0
-    f1 = (
-        2 * (precision * recall) / (precision + recall)
-        if (precision + recall) > 0
-        else 0
-    )
+    f1 = 2 * (precision * recall) / (precision + recall) if (precision + recall) > 0 else 0
 
     return {
         "accuracy": accuracy,
@@ -183,52 +169,115 @@ def calculate_metrics(matrix: dict) -> dict:
     }
 
 
-def aggregate_metrics(metrics_list: list[dict]) -> dict:
-    if not metrics_list:
-        return {}
-    agg = {"accuracy": 0, "precision": 0, "recall": 0, "f1": 0, "count": 0}
-    for m in metrics_list:
-        for key in ["accuracy", "precision", "recall", "f1"]:
-            agg[key] += m[key]
-        agg["count"] += 1
-    for key in ["accuracy", "precision", "recall", "f1"]:
-        agg[key] /= agg["count"]
-    return agg
+def get_dataset_badge(dataset: str) -> str:
+    labels = {"halueval": "HaluEval", "truthfulqa": "TruthfulQA"}
+    css_class = dataset if dataset in labels else ""
+    return f'<span class="dataset-badge {css_class}">{labels.get(dataset, dataset)}</span>'
 
 
-def get_dataset_label(option: str) -> str:
-    labels = {
-        "HaluEval": "📚 HaluEval",
-        "TruthfulQA": "📚 TruthfulQA",
-        "HaluEval+TruthfulQA": "📚 HaluEval + TruthfulQA",
-    }
-    return labels.get(option, option)
+def scope_label(evaluation: dict) -> str:
+    """Libellé lisible d'un résultat de recherche, pour le sélecteur d'affichage."""
+    versions = f"pipeline={evaluation.get('pipeline_version') or '—'}"
+    if evaluation.get("generation_version"):
+        versions += f", generation={evaluation['generation_version']}"
+    versions += f", eval={evaluation['eval_version']}"
+    return (
+        f"{evaluation['dataset']} · {evaluation['model_id']} · ratio={evaluation['ratio']} · "
+        f"{versions} · n={evaluation['n_examples']}/{evaluation.get('dataset_test_size') or '?'}"
+    )
 
 
-def get_dataset_badge(option: str) -> str:
-    badges = {
-        "HaluEval": '<span class="dataset-badge halueval">HaluEval</span>',
-        "TruthfulQA": '<span class="dataset-badge truthfulqa">TruthfulQA</span>',
-        "HaluEval+TruthfulQA": '<span class="dataset-badge combined">HaluEval + TruthfulQA</span>',
-    }
-    return badges.get(option, "")
+def fetch_baseline(mode: str, scope: dict) -> dict | None:
+    """Baseline correspondant à `scope`, ou `None` si elle n'existe pas
+    (mode généré, cache seul — cf. `EvaluationResult`). `/baseline-evaluation`
+    (mode dataset) renvoie la `ConfusionMatrix` nue, `/baseline-evaluation-generated`
+    un `EvaluationResult` complet — formats différents, cf. berlue/api/schemas.py."""
+    if mode == "generated":
+        result = get_baseline_evaluation_generated(
+            dataset=scope["dataset"],
+            ratio=scope["ratio"],
+            model_id=scope["model_id"],
+            generation_version=scope["generation_version"],
+            eval_version=scope["eval_version"],
+        )
+        return result["matrix"] if result else None
+    return get_baseline_evaluation(dataset=scope["dataset"], ratio=scope["ratio"])
 
 
-def get_datasets_from_option(option: str) -> list[str]:
-    if option == "HaluEval":
-        return ["HaluEval"]
-    elif option == "TruthfulQA":
-        return ["TruthfulQA"]
-    elif option == "HaluEval+TruthfulQA":
-        return ["HaluEval", "TruthfulQA"]
-    return []
+def render_scope(scope: dict, baseline_matrix: dict | None, key_prefix: str) -> None:
+    """Affiche heatmaps + cards pour un scope (matrice Berlue + baseline si
+    dispo) — heatmaps en premier, blocs d'info (fond sombre) en dessous."""
+    berlue_matrix = scope["matrix"]
+    berlue_metrics = calculate_metrics(berlue_matrix)
+    baseline_metrics = calculate_metrics(baseline_matrix) if baseline_matrix else None
+
+    if baseline_matrix is not None:
+        c1, c2 = st.columns(2)
+        with c1:
+            st.plotly_chart(
+                plot_confusion_heatmap(baseline_matrix, f"Baseline — {scope['dataset']}", "Oranges"),
+                use_container_width=True,
+                key=f"{key_prefix}-baseline",
+            )
+        with c2:
+            st.plotly_chart(
+                plot_confusion_heatmap(berlue_matrix, f"Berlue — {scope['dataset']}", "Greens"),
+                use_container_width=True,
+                key=f"{key_prefix}-berlue",
+            )
+    else:
+        st.caption("⚠️ Pas de baseline calculée pour ce scope.")
+        st.plotly_chart(
+            plot_confusion_heatmap(berlue_matrix, f"Berlue — {scope['dataset']}", "Greens"),
+            use_container_width=True,
+            key=f"{key_prefix}-berlue-only",
+        )
+
+    n_examples, test_size = scope["n_examples"], scope.get("dataset_test_size")
+    coverage_note = (
+        f" — run partiel ({n_examples}/{test_size})" if test_size and n_examples < test_size else ""
+    )
+    st.markdown(
+        f"""
+    <div class="scope-info">
+        {get_dataset_badge(scope["dataset"])} &nbsp;
+        <strong style="color:#fff;">{scope["model_id"]}</strong> · ratio={scope["ratio"]} ·
+        {n_examples} exemple(s){coverage_note} · calculé le {scope["computed_at"]}
+    </div>
+    """,
+        unsafe_allow_html=True,
+    )
+
+    col1, col2, col3, col4 = st.columns(4)
+    metric_keys = [("Accuracy", "accuracy"), ("Precision", "precision"), ("Recall", "recall"), ("F1-Score", "f1")]
+    for col, (name, key) in zip([col1, col2, col3, col4], metric_keys):
+        baseline_html = ""
+        if baseline_metrics is not None:
+            delta = berlue_metrics[key] - baseline_metrics[key]
+            delta_class = "positive" if delta >= 0 else "negative"
+            delta_sign = "▲" if delta >= 0 else "▼"
+            # Pas d'indentation ici : une ligne indentée ≥4 espaces dans le
+            # markdown final serait rendue comme un bloc de code littéral
+            # plutôt que comme le HTML brut attendu (unsafe_allow_html).
+            baseline_html = (
+                f'<div class="baseline">Baseline: {baseline_metrics[key]:.1%}</div>'
+                f'<div class="delta {delta_class}">{delta_sign} {abs(delta):.1%}</div>'
+            )
+        with col:
+            st.markdown(
+                f'<div class="metric-card">'
+                f'<div class="label">{name}</div>'
+                f'<div class="value green">{berlue_metrics[key]:.1%}</div>'
+                f"{baseline_html}"
+                f"</div>",
+                unsafe_allow_html=True,
+            )
 
 
 # ==============================================================================
 # INTERFACE
 # ==============================================================================
 
-# --- EN-TÊTE ---
 st.markdown(
     """
 <div style="margin-bottom: 2rem;">
@@ -236,448 +285,162 @@ st.markdown(
         📊 Tableau de Bord d'Évaluation
     </h1>
     <p style="color: #a0aec0; font-size: 1.05rem; margin-top: 0.3rem;">
-        Lancez un benchmark pour comparer la <strong>Baseline</strong> (modèle brut) 
-        avec <strong>Berlue</strong> (modèle + fact-checking)
+        Recherchez un résultat d'évaluation déjà calculé pour comparer
+        <strong>Baseline</strong> (modèle brut) et <strong>Berlue</strong> (modèle + fact-checking)
     </p>
 </div>
 """,
     unsafe_allow_html=True,
 )
 
-# --- SIDEBAR ---
+FILTER_JOKER = "(tous)"
+
+
+def _filter_options(scopes: list[dict], field: str) -> list[str]:
+    """Valeurs distinctes de `field` réellement présentes dans `scopes`,
+    triées — alimente les selectbox de filtre (jamais de valeur qui ne
+    correspond à aucun résultat)."""
+    values = {str(r[field]) for r in scopes if r.get(field) is not None}
+    return [FILTER_JOKER, *sorted(values)]
+
+
 with st.sidebar:
-    st.markdown("### ⚙️ Paramètres")
+    st.markdown("### 🔍 Filtres")
 
-    # Dataset
-    st.markdown("#### 📚 Dataset")
-    dataset_option = st.radio(
-        "Choisissez le dataset à tester :",
-        options=["HaluEval", "TruthfulQA", "HaluEval+TruthfulQA"],
-        format_func=get_dataset_label,
-        label_visibility="collapsed",
+    mode = st.radio(
+        "Mode",
+        options=["dataset", "generated"],
+        format_func=lambda m: "📚 Dataset (réponse du jeu de données)" if m == "dataset" else "🤖 Généré + juge",
     )
 
-    # Info datasets
-    if dataset_option == "HaluEval":
-        st.markdown(
-            """
-        <div class="dataset-info">
-            <div class="name">📚 HaluEval</div>
-            <div class="desc">~35k réponses QA/dialogue/résumé, appariées correcte vs hallucinée</div>
-        </div>
-        """,
-            unsafe_allow_html=True,
+    all_scopes = list_evaluated_models(mode=mode) or []
+
+    dataset_filter = st.selectbox("Dataset", options=_filter_options(all_scopes, "dataset"))
+    model_id_filter = st.selectbox("Model ID", options=_filter_options(all_scopes, "model_id"))
+    ratio_filter = st.selectbox("Ratio train/test", options=_filter_options(all_scopes, "ratio"))
+    pipeline_version_filter = st.selectbox(
+        "Pipeline version", options=_filter_options(all_scopes, "pipeline_version")
+    )
+    generation_version_filter = FILTER_JOKER
+    if mode == "generated":
+        generation_version_filter = st.selectbox(
+            "Generation version", options=_filter_options(all_scopes, "generation_version")
         )
-    elif dataset_option == "TruthfulQA":
-        st.markdown(
-            """
-        <div class="dataset-info">
-            <div class="name">📚 TruthfulQA</div>
-            <div class="desc">817 questions sur 38 catégories d'idées reçues</div>
-        </div>
-        """,
-            unsafe_allow_html=True,
-        )
+    eval_version_filter = st.selectbox("Eval version", options=_filter_options(all_scopes, "eval_version"))
+
+    if st.button("🔄 Actualiser", use_container_width=True):
+        list_evaluated_models.clear()
+        st.rerun()
+
+# --- RÉSULTATS ---
+
+
+def _matches(scope: dict) -> bool:
+    checks = [
+        (dataset_filter, scope["dataset"]),
+        (model_id_filter, scope["model_id"]),
+        (ratio_filter, scope["ratio"]),
+        (pipeline_version_filter, scope.get("pipeline_version")),
+        (eval_version_filter, scope["eval_version"]),
+    ]
+    if mode == "generated":
+        checks.append((generation_version_filter, scope.get("generation_version")))
+    return all(selected == FILTER_JOKER or str(actual) == selected for selected, actual in checks)
+
+
+results = [r for r in all_scopes if _matches(r)]
+active_mode = mode
+
+st.markdown(f"### 🔎 {len(results)} résultat(s) sur {len(all_scopes)} au total")
+
+if not all_scopes:
+    st.warning("Aucune évaluation en cache pour ce mode.")
+elif not results:
+    st.warning("Aucun résultat pour ces filtres.")
+else:
+    st.caption("Sélectionne une ou plusieurs lignes (case à cocher) pour afficher leur baseline.")
+    selection_event = st.dataframe(
+        pd.DataFrame(
+            [
+                {
+                    "Dataset": r["dataset"],
+                    "Model ID": r["model_id"],
+                    "Ratio": r["ratio"],
+                    "Pipeline": r.get("pipeline_version") or "—",
+                    "Génération": r.get("generation_version") or "—",
+                    "Éval": r["eval_version"],
+                    "N": r["n_examples"],
+                    "Split total": r.get("dataset_test_size") or "?",
+                    "Calculé le": r["computed_at"],
+                }
+                for r in results
+            ]
+        ),
+        use_container_width=True,
+        hide_index=True,
+        on_select="rerun",
+        selection_mode="multi-row",
+    )
+    # Streamlit ne réinitialise pas la sélection quand `results` change de
+    # taille (ex. filtre resserré) — un index sélectionné avant peut ne plus
+    # exister dans la liste courante, d'où le garde-fou sur len(results).
+    selected = [results[i] for i in selection_event.selection.rows if i < len(results)]
+
+    if not selected:
+        st.info("Sélectionne au moins un résultat ci-dessus pour l'afficher.")
     else:
-        st.markdown(
-            """
-        <div class="dataset-info">
-            <div class="name">📚 Mode Combiné</div>
-            <div class="desc">HaluEval + TruthfulQA — évaluation complète</div>
-        </div>
-        """,
-            unsafe_allow_html=True,
-        )
+        st.divider()
+        entries = [(scope, fetch_baseline(active_mode, scope)) for scope in selected]
 
-    st.divider()
+        if len(entries) == 1:
+            scope, baseline_matrix = entries[0]
+            render_scope(scope, baseline_matrix, key_prefix="single")
+        else:
+            tabs = st.tabs([f"📊 {scope_label(scope)}" for scope, _ in entries])
+            for tab, (scope, baseline_matrix) in zip(tabs, entries):
+                with tab:
+                    render_scope(scope, baseline_matrix, key_prefix=scope["computed_at"])
 
-    # Sample size
-    st.markdown("#### 📊 Échantillonnage")
-    sample_size = st.slider(
-        "Nombre d'échantillons",
-        min_value=10,
-        max_value=500,
-        value=100,
-        step=10,
-        label_visibility="collapsed",
-    )
-
-    st.divider()
-
-    # Model
-    st.markdown("#### 🤖 Modèle LLM")
-    try:
-        available_llms = get_available_llms()
-    except requests.exceptions.RequestException as e:
-        st.error(f"❌ Erreur de connexion : {e}")
-        available_llms = []
-
-    selected_llm = st.selectbox(
-        "Modèle", options=available_llms, label_visibility="collapsed"
-    )
-
-    st.markdown("#### 🌡️ Température")
-    selected_temp = st.slider(
-        "Température",
-        min_value=0.0,
-        max_value=1.0,
-        value=0.0,
-        step=0.05,
-        label_visibility="collapsed",
-    )
-
-    st.divider()
-
-    # Summary
-    datasets = get_datasets_from_option(dataset_option)
-    st.markdown(
-        f"""
-    <div style="background: rgba(102,126,234,0.08); border: 1px solid rgba(102,126,234,0.2); border-radius: 10px; padding: 1rem; font-size: 0.85rem; color: #a0aec0; line-height: 1.8;">
-        <div><strong style="color: #fff;">Dataset(s):</strong> {", ".join(datasets)}</div>
-        <div><strong style="color: #fff;">Échantillons:</strong> {sample_size} / dataset</div>
-        <div><strong style="color: #fff;">Total:</strong> {len(datasets) * sample_size}</div>
-        <div><strong style="color: #fff;">Modèle:</strong> {selected_llm}</div>
-        <div><strong style="color: #fff;">Température:</strong> {selected_temp:.2f}</div>
-    </div>
-    """,
-        unsafe_allow_html=True,
-    )
-
-# --- MAIN ---
-
-# Badge
-st.markdown(
-    f"""
-<div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem;">
-    <span style="color: #a0aec0;">Dataset :</span> {get_dataset_badge(dataset_option)}
-</div>
-""",
-    unsafe_allow_html=True,
-)
-
-# Bouton
-if st.button("🚀 Lancer le Benchmark", type="primary", use_container_width=True):
-    datasets = get_datasets_from_option(dataset_option)
-
-    with st.spinner(f"🔄 Évaluation sur {len(datasets)} dataset(s)..."):
-        try:
-            all_results = []
-            all_baseline_metrics = []
-            all_berlue_metrics = []
-
-            progress_bar = st.progress(0)
-            status_text = st.empty()
-
-            for idx, dataset in enumerate(datasets):
-                status_text.text(f"📊 {dataset} ({idx + 1}/{len(datasets)})")
-                result = run_evaluation(
-                    dataset, sample_size, selected_llm, selected_temp
-                )
-
-                if result and result.get("status") == "success":
-                    all_results.append({"dataset": dataset, "result": result})
-                    baseline_metrics = calculate_metrics(result["metrics"]["baseline"])
-                    berlue_metrics = calculate_metrics(result["metrics"]["berlue"])
-                    all_baseline_metrics.append(baseline_metrics)
-                    all_berlue_metrics.append(berlue_metrics)
-
-                progress_bar.progress((idx + 1) / len(datasets))
-
-            status_text.empty()
-            progress_bar.empty()
-
-            if not all_results:
-                st.error("❌ L'évaluation a échoué.")
-                st.stop()
-
-            st.success(f"✅ Benchmark terminé sur {len(all_results)} dataset(s)")
-            st.balloons()
-
-            # --- AFFICHAGE ---
-
-            if len(datasets) == 1:
-                result_data = all_results[0]
-                dataset = result_data["dataset"]
-                result = result_data["result"]
-                metrics = result["metrics"]
-
-                baseline_metrics = calculate_metrics(metrics["baseline"])
-                berlue_metrics = calculate_metrics(metrics["berlue"])
-
-                st.markdown("### 📊 Métriques de Performance")
-
-                col1, col2, col3, col4 = st.columns(4)
-                metric_names = ["Accuracy", "Precision", "Recall", "F1-Score"]
-
-                for col, name in zip([col1, col2, col3, col4], metric_names):
-                    key = name.lower()
-                    delta = berlue_metrics[key] - baseline_metrics[key]
-                    delta_class = "positive" if delta >= 0 else "negative"
-                    delta_sign = "▲" if delta >= 0 else "▼"
-
-                    with col:
-                        st.markdown(
-                            f"""
-                        <div class="metric-card">
-                            <div class="label">{name}</div>
-                            <div class="value green">{berlue_metrics[key]:.1%}</div>
-                            <div class="baseline">Baseline: {baseline_metrics[key]:.1%}</div>
-                            <div class="delta {delta_class}">{delta_sign} {abs(delta):.1%}</div>
-                        </div>
-                        """,
-                            unsafe_allow_html=True,
-                        )
-
-                st.divider()
-
-                col1, col2 = st.columns(2)
-                with col1:
-                    fig = plot_confusion_heatmap(
-                        metrics["baseline"], f"Baseline — {dataset}", "Oranges"
-                    )
-                    st.plotly_chart(fig, use_container_width=True)
-                with col2:
-                    fig = plot_confusion_heatmap(
-                        metrics["berlue"], f"Berlue — {dataset}", "Greens"
-                    )
-                    st.plotly_chart(fig, use_container_width=True)
-
-                # Graphique comparatif
-                st.divider()
-                st.markdown("### 📈 Comparaison Baseline vs Berlue")
-
-                fig_compare = go.Figure()
-                fig_compare.add_trace(
-                    go.Bar(
-                        name="Baseline",
-                        x=metric_names,
-                        y=[baseline_metrics[m.lower()] for m in metric_names],
-                        marker_color="#fc8181",
-                        text=[
-                            f"{v:.1%}"
-                            for v in [baseline_metrics[m.lower()] for m in metric_names]
-                        ],
-                        textposition="outside",
-                    )
-                )
-                fig_compare.add_trace(
-                    go.Bar(
-                        name="Berlue",
-                        x=metric_names,
-                        y=[berlue_metrics[m.lower()] for m in metric_names],
-                        marker_color="#48bb78",
-                        text=[
-                            f"{v:.1%}"
-                            for v in [berlue_metrics[m.lower()] for m in metric_names]
-                        ],
-                        textposition="outside",
-                    )
-                )
-                fig_compare.update_layout(
-                    title=f"Performance sur {dataset}",
-                    xaxis_title="Métrique",
-                    yaxis_title="Score",
-                    yaxis_tickformat=".0%",
-                    height=400,
-                    barmode="group",
-                    legend={
-                        "orientation": "h",
-                        "yanchor": "bottom",
-                        "y": 1.02,
-                        "xanchor": "right",
-                        "x": 1,
-                    },
-                    paper_bgcolor="rgba(0,0,0,0)",
-                    plot_bgcolor="rgba(0,0,0,0)",
-                )
-                st.plotly_chart(fig_compare, use_container_width=True)
-
-            else:
-                # Mode combiné
-                agg_baseline = aggregate_metrics(all_baseline_metrics)
-                agg_berlue = aggregate_metrics(all_berlue_metrics)
-
-                st.markdown("### 🎯 Performance Globale (Moyenne)")
-
-                col1, col2, col3, col4 = st.columns(4)
-                metric_names = ["Accuracy", "Precision", "Recall", "F1-Score"]
-
-                for col, name in zip([col1, col2, col3, col4], metric_names):
-                    key = name.lower()
-                    delta = agg_berlue[key] - agg_baseline[key]
-                    delta_class = "positive" if delta >= 0 else "negative"
-                    delta_sign = "▲" if delta >= 0 else "▼"
-
-                    with col:
-                        st.markdown(
-                            f"""
-                        <div class="metric-card">
-                            <div class="label">{name} (moyen)</div>
-                            <div class="value purple">{agg_berlue[key]:.1%}</div>
-                            <div class="baseline">Baseline: {agg_baseline[key]:.1%}</div>
-                            <div class="delta {delta_class}">{delta_sign} {abs(delta):.1%}</div>
-                        </div>
-                        """,
-                            unsafe_allow_html=True,
-                        )
-
-                st.divider()
-
-                # Graphique global
-                st.markdown("### 📈 Performance Moyenne sur les 2 Datasets")
-
-                fig_global = go.Figure()
-                baseline_values = [agg_baseline[m.lower()] for m in metric_names]
-                berlue_values = [agg_berlue[m.lower()] for m in metric_names]
-
-                fig_global.add_trace(
-                    go.Bar(
-                        name="Baseline",
-                        x=metric_names,
-                        y=baseline_values,
-                        marker_color="#fc8181",
-                        text=[f"{v:.1%}" for v in baseline_values],
-                        textposition="outside",
-                    )
-                )
-                fig_global.add_trace(
-                    go.Bar(
-                        name="Berlue",
-                        x=metric_names,
-                        y=berlue_values,
-                        marker_color="#9F7AEA",
-                        text=[f"{v:.1%}" for v in berlue_values],
-                        textposition="outside",
-                    )
-                )
-                fig_global.update_layout(
-                    title="Performance moyenne HaluEval + TruthfulQA",
-                    xaxis_title="Métrique",
-                    yaxis_title="Score",
-                    yaxis_tickformat=".0%",
-                    height=400,
-                    barmode="group",
-                    legend={
-                        "orientation": "h",
-                        "yanchor": "bottom",
-                        "y": 1.02,
-                        "xanchor": "right",
-                        "x": 1,
-                    },
-                    paper_bgcolor="rgba(0,0,0,0)",
-                    plot_bgcolor="rgba(0,0,0,0)",
-                )
-                st.plotly_chart(fig_global, use_container_width=True)
-
-                st.divider()
-
-                # Résultats par dataset
-                st.markdown("### 📊 Résultats par Dataset")
-                tabs = st.tabs([f"📊 {r['dataset']}" for r in all_results])
-
-                for idx, tab in enumerate(tabs):
-                    with tab:
-                        result_data = all_results[idx]
-                        dataset = result_data["dataset"]
-                        result = result_data["result"]
-                        metrics = result["metrics"]
-
-                        baseline_metrics = calculate_metrics(metrics["baseline"])
-                        berlue_metrics = calculate_metrics(metrics["berlue"])
-
-                        c1, c2, c3, c4 = st.columns(4)
-                        for col, name in zip([c1, c2, c3, c4], metric_names):
-                            key = name.lower()
-                            with col:
-                                st.markdown(
-                                    f"""
-                                <div class="metric-card" style="padding: 0.6rem;">
-                                    <div class="label" style="font-size: 0.65rem;">{name}</div>
-                                    <div class="value green" style="font-size: 1.3rem;">{berlue_metrics[key]:.1%}</div>
-                                    <div class="baseline" style="font-size: 0.65rem;">Baseline: {baseline_metrics[key]:.1%}</div>
-                                </div>
-                                """,
-                                    unsafe_allow_html=True,
-                                )
-
-                        c1, c2 = st.columns(2)
-                        with c1:
-                            fig = plot_confusion_heatmap(
-                                metrics["baseline"], f"Baseline — {dataset}", "Oranges"
-                            )
-                            st.plotly_chart(fig, use_container_width=True)
-                        with c2:
-                            fig = plot_confusion_heatmap(
-                                metrics["berlue"], f"Berlue — {dataset}", "Greens"
-                            )
-                            st.plotly_chart(fig, use_container_width=True)
-
-                # Comparaison
-                st.divider()
-                st.markdown("### 📊 Comparaison HaluEval vs TruthfulQA")
-
-                comparison_data = []
-                for result_data in all_results:
-                    dataset = result_data["dataset"]
-                    result = result_data["result"]
-                    baseline_metrics = calculate_metrics(result["metrics"]["baseline"])
-                    berlue_metrics = calculate_metrics(result["metrics"]["berlue"])
-                    comparison_data.append(
-                        {
-                            "Dataset": dataset,
-                            "Baseline": baseline_metrics["accuracy"],
-                            "Berlue": berlue_metrics["accuracy"],
-                            "Gain": berlue_metrics["accuracy"]
-                            - baseline_metrics["accuracy"],
-                        }
-                    )
-
-                df_compare = pd.DataFrame(comparison_data)
-
-                fig_compare = go.Figure()
-                fig_compare.add_trace(
-                    go.Bar(
-                        name="Baseline",
-                        x=df_compare["Dataset"],
-                        y=df_compare["Baseline"],
-                        marker_color="#fc8181",
-                        text=[f"{v:.1%}" for v in df_compare["Baseline"]],
-                        textposition="outside",
-                    )
-                )
-                fig_compare.add_trace(
-                    go.Bar(
-                        name="Berlue",
-                        x=df_compare["Dataset"],
-                        y=df_compare["Berlue"],
-                        marker_color="#48bb78",
-                        text=[f"{v:.1%}" for v in df_compare["Berlue"]],
-                        textposition="outside",
-                    )
-                )
-                fig_compare.update_layout(
-                    title="Comparaison des performances par dataset",
-                    xaxis_title="Dataset",
-                    yaxis_title="Accuracy",
-                    yaxis_tickformat=".0%",
-                    height=400,
-                    barmode="group",
-                    legend={
-                        "orientation": "h",
-                        "yanchor": "bottom",
-                        "y": 1.02,
-                        "xanchor": "right",
-                        "x": 1,
-                    },
-                    paper_bgcolor="rgba(0,0,0,0)",
-                    plot_bgcolor="rgba(0,0,0,0)",
-                )
-                st.plotly_chart(fig_compare, use_container_width=True)
-
-            # Footer
             st.divider()
-            st.caption(f"🕐 {datetime.now().strftime('%d/%m/%Y à %H:%M')}")  # noqa: DTZ005 -- heure locale affichée à l'utilisateur, volontairement naïve
-            st.caption("💡 Les résultats sont basés sur les échantillons testés")
+            st.markdown("### 📈 Comparaison Accuracy")
+            comparison_labels = [f"{s['dataset']} · {s['model_id']}" for s, _ in entries]
+            berlue_acc = [calculate_metrics(s["matrix"])["accuracy"] for s, _ in entries]
+            baseline_acc = [
+                calculate_metrics(b)["accuracy"] if b is not None else None for _, b in entries
+            ]
 
-        except Exception as e:  # noqa: BLE001 -- filet de sécurité UI, couvre aussi les erreurs de rendu
-            st.error(f"❌ Erreur: {e!s}")
+            fig_compare = go.Figure()
+            if any(v is not None for v in baseline_acc):
+                fig_compare.add_trace(
+                    go.Bar(
+                        name="Baseline",
+                        x=comparison_labels,
+                        y=[v or 0 for v in baseline_acc],
+                        marker_color="#fc8181",
+                        text=[f"{v:.1%}" if v is not None else "—" for v in baseline_acc],
+                        textposition="outside",
+                    )
+                )
+            fig_compare.add_trace(
+                go.Bar(
+                    name="Berlue",
+                    x=comparison_labels,
+                    y=berlue_acc,
+                    marker_color="#48bb78",
+                    text=[f"{v:.1%}" for v in berlue_acc],
+                    textposition="outside",
+                )
+            )
+            fig_compare.update_layout(
+                xaxis_title="Scope",
+                yaxis_title="Accuracy",
+                yaxis_tickformat=".0%",
+                height=400,
+                barmode="group",
+                legend={"orientation": "h", "yanchor": "bottom", "y": 1.02, "xanchor": "right", "x": 1},
+                paper_bgcolor="rgba(0,0,0,0)",
+                plot_bgcolor="rgba(0,0,0,0)",
+            )
+            st.plotly_chart(fig_compare, use_container_width=True)
+
+    st.divider()
