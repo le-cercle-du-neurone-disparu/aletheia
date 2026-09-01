@@ -107,8 +107,12 @@ st.markdown(
 # ==============================================================================
 
 
-def plot_confusion_heatmap(matrix_data: dict, title: str, color_scale: str) -> go.Figure:
-    df = pd.DataFrame([matrix_data["ground_truth_true"], matrix_data["ground_truth_false"]])
+def plot_confusion_heatmap(
+    matrix_data: dict, title: str, color_scale: str
+) -> go.Figure:
+    df = pd.DataFrame(
+        [matrix_data["ground_truth_true"], matrix_data["ground_truth_false"]]
+    )
 
     df.index = ["✅ Vrai (Réalité)", "❌ Faux (Réalité)"]
     df.columns = ["✅ Prédit Vrai", "⚠️ Indécis", "❌ Prédit Faux"]
@@ -116,7 +120,13 @@ def plot_confusion_heatmap(matrix_data: dict, title: str, color_scale: str) -> g
     # text_auto=False : les valeurs sont dessinées via add_annotation ci-dessous
     # (contraste blanc/foncé selon la valeur) — text_auto=True superposerait un
     # second jeu de chiffres par-dessus, illisible (effet de flou/dédoublement).
-    fig = px.imshow(df, text_auto=False, color_continuous_scale=color_scale, title=title, aspect="auto")
+    fig = px.imshow(
+        df,
+        text_auto=False,
+        color_continuous_scale=color_scale,
+        title=title,
+        aspect="auto",
+    )
     fig.update_layout(
         xaxis_title="Prédiction",
         yaxis_title="Vérité terrain",
@@ -155,7 +165,11 @@ def calculate_metrics(matrix: dict) -> dict:
     accuracy = (tp + tn) / total if total > 0 else 0
     precision = tp / (tp + fp) if (tp + fp) > 0 else 0
     recall = tp / (tp + fn) if (tp + fn) > 0 else 0
-    f1 = 2 * (precision * recall) / (precision + recall) if (precision + recall) > 0 else 0
+    f1 = (
+        2 * (precision * recall) / (precision + recall)
+        if (precision + recall) > 0
+        else 0
+    )
 
     return {
         "accuracy": accuracy,
@@ -172,7 +186,9 @@ def calculate_metrics(matrix: dict) -> dict:
 def get_dataset_badge(dataset: str) -> str:
     labels = {"halueval": "HaluEval", "truthfulqa": "TruthfulQA"}
     css_class = dataset if dataset in labels else ""
-    return f'<span class="dataset-badge {css_class}">{labels.get(dataset, dataset)}</span>'
+    return (
+        f'<span class="dataset-badge {css_class}">{labels.get(dataset, dataset)}</span>'
+    )
 
 
 def scope_label(evaluation: dict) -> str:
@@ -215,27 +231,35 @@ def render_scope(scope: dict, baseline_matrix: dict | None, key_prefix: str) -> 
         c1, c2 = st.columns(2)
         with c1:
             st.plotly_chart(
-                plot_confusion_heatmap(baseline_matrix, f"Baseline — {scope['dataset']}", "Oranges"),
+                plot_confusion_heatmap(
+                    baseline_matrix, f"Baseline — {scope['dataset']}", "Oranges"
+                ),
                 use_container_width=True,
                 key=f"{key_prefix}-baseline",
             )
         with c2:
             st.plotly_chart(
-                plot_confusion_heatmap(berlue_matrix, f"Berlue — {scope['dataset']}", "Greens"),
+                plot_confusion_heatmap(
+                    berlue_matrix, f"Berlue — {scope['dataset']}", "Greens"
+                ),
                 use_container_width=True,
                 key=f"{key_prefix}-berlue",
             )
     else:
         st.caption("⚠️ Pas de baseline calculée pour ce scope.")
         st.plotly_chart(
-            plot_confusion_heatmap(berlue_matrix, f"Berlue — {scope['dataset']}", "Greens"),
+            plot_confusion_heatmap(
+                berlue_matrix, f"Berlue — {scope['dataset']}", "Greens"
+            ),
             use_container_width=True,
             key=f"{key_prefix}-berlue-only",
         )
 
     n_examples, test_size = scope["n_examples"], scope.get("dataset_test_size")
     coverage_note = (
-        f" — run partiel ({n_examples}/{test_size})" if test_size and n_examples < test_size else ""
+        f" — run partiel ({n_examples}/{test_size})"
+        if test_size and n_examples < test_size
+        else ""
     )
     st.markdown(
         f"""
@@ -249,7 +273,12 @@ def render_scope(scope: dict, baseline_matrix: dict | None, key_prefix: str) -> 
     )
 
     col1, col2, col3, col4 = st.columns(4)
-    metric_keys = [("Accuracy", "accuracy"), ("Precision", "precision"), ("Recall", "recall"), ("F1-Score", "f1")]
+    metric_keys = [
+        ("Accuracy", "accuracy"),
+        ("Precision", "precision"),
+        ("Recall", "recall"),
+        ("F1-Score", "f1"),
+    ]
     for col, (name, key) in zip([col1, col2, col3, col4], metric_keys):
         baseline_html = ""
         if baseline_metrics is not None:
@@ -310,23 +339,36 @@ with st.sidebar:
     mode = st.radio(
         "Mode",
         options=["dataset", "generated"],
-        format_func=lambda m: "📚 Dataset (réponse du jeu de données)" if m == "dataset" else "🤖 Généré + juge",
+        format_func=lambda m: (
+            "📚 Dataset (réponse du jeu de données)"
+            if m == "dataset"
+            else "🤖 Généré + juge"
+        ),
     )
 
     all_scopes = list_evaluated_models(mode=mode) or []
 
-    dataset_filter = st.selectbox("Dataset", options=_filter_options(all_scopes, "dataset"))
-    model_id_filter = st.selectbox("Model ID", options=_filter_options(all_scopes, "model_id"))
-    ratio_filter = st.selectbox("Ratio train/test", options=_filter_options(all_scopes, "ratio"))
+    dataset_filter = st.selectbox(
+        "Dataset", options=_filter_options(all_scopes, "dataset")
+    )
+    model_id_filter = st.selectbox(
+        "Model ID", options=_filter_options(all_scopes, "model_id")
+    )
+    ratio_filter = st.selectbox(
+        "Ratio train/test", options=_filter_options(all_scopes, "ratio")
+    )
     pipeline_version_filter = st.selectbox(
         "Pipeline version", options=_filter_options(all_scopes, "pipeline_version")
     )
     generation_version_filter = FILTER_JOKER
     if mode == "generated":
         generation_version_filter = st.selectbox(
-            "Generation version", options=_filter_options(all_scopes, "generation_version")
+            "Generation version",
+            options=_filter_options(all_scopes, "generation_version"),
         )
-    eval_version_filter = st.selectbox("Eval version", options=_filter_options(all_scopes, "eval_version"))
+    eval_version_filter = st.selectbox(
+        "Eval version", options=_filter_options(all_scopes, "eval_version")
+    )
 
     if st.button("🔄 Actualiser", use_container_width=True):
         list_evaluated_models.clear()
@@ -345,7 +387,10 @@ def _matches(scope: dict) -> bool:
     ]
     if mode == "generated":
         checks.append((generation_version_filter, scope.get("generation_version")))
-    return all(selected == FILTER_JOKER or str(actual) == selected for selected, actual in checks)
+    return all(
+        selected == FILTER_JOKER or str(actual) == selected
+        for selected, actual in checks
+    )
 
 
 results = [r for r in all_scopes if _matches(r)]
@@ -358,7 +403,9 @@ if not all_scopes:
 elif not results:
     st.warning("Aucun résultat pour ces filtres.")
 else:
-    st.caption("Sélectionne une ou plusieurs lignes (case à cocher) pour afficher leur baseline.")
+    st.caption(
+        "Sélectionne une ou plusieurs lignes (case à cocher) pour afficher leur baseline."
+    )
     selection_event = st.dataframe(
         pd.DataFrame(
             [
@@ -399,14 +446,21 @@ else:
             tabs = st.tabs([f"📊 {scope_label(scope)}" for scope, _ in entries])
             for tab, (scope, baseline_matrix) in zip(tabs, entries):
                 with tab:
-                    render_scope(scope, baseline_matrix, key_prefix=scope["computed_at"])
+                    render_scope(
+                        scope, baseline_matrix, key_prefix=scope["computed_at"]
+                    )
 
             st.divider()
             st.markdown("### 📈 Comparaison Accuracy")
-            comparison_labels = [f"{s['dataset']} · {s['model_id']}" for s, _ in entries]
-            berlue_acc = [calculate_metrics(s["matrix"])["accuracy"] for s, _ in entries]
+            comparison_labels = [
+                f"{s['dataset']} · {s['model_id']}" for s, _ in entries
+            ]
+            berlue_acc = [
+                calculate_metrics(s["matrix"])["accuracy"] for s, _ in entries
+            ]
             baseline_acc = [
-                calculate_metrics(b)["accuracy"] if b is not None else None for _, b in entries
+                calculate_metrics(b)["accuracy"] if b is not None else None
+                for _, b in entries
             ]
 
             fig_compare = go.Figure()
@@ -417,7 +471,9 @@ else:
                         x=comparison_labels,
                         y=[v or 0 for v in baseline_acc],
                         marker_color="#fc8181",
-                        text=[f"{v:.1%}" if v is not None else "—" for v in baseline_acc],
+                        text=[
+                            f"{v:.1%}" if v is not None else "—" for v in baseline_acc
+                        ],
                         textposition="outside",
                     )
                 )
@@ -437,7 +493,13 @@ else:
                 yaxis_tickformat=".0%",
                 height=400,
                 barmode="group",
-                legend={"orientation": "h", "yanchor": "bottom", "y": 1.02, "xanchor": "right", "x": 1},
+                legend={
+                    "orientation": "h",
+                    "yanchor": "bottom",
+                    "y": 1.02,
+                    "xanchor": "right",
+                    "x": 1,
+                },
                 paper_bgcolor="rgba(0,0,0,0)",
                 plot_bgcolor="rgba(0,0,0,0)",
             )
