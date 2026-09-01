@@ -997,7 +997,7 @@ st.markdown(
             <li>Identifiez les hallucinations avec code couleur</li>
             <li>Vérifiez les sources utilisées pour chaque affirmation</li>
         </ul>
-        <a href="/1_🔎_Prediction" target="_self" class="btn-primary {"btn-disabled" if feature_disabled else ""}" {'style="pointer-events: none; opacity: 0.5;"' if feature_disabled else ""}>
+        <a href="/Prediction" target="_self" class="btn-primary {"btn-disabled" if feature_disabled else ""}" {'style="pointer-events: none; opacity: 0.5;"' if feature_disabled else ""}>
             {"🔒 " if feature_disabled else "🔍 "}Accéder à l'Explorateur
         </a>
     </div>
@@ -1011,7 +1011,7 @@ st.markdown(
             <li>Visualisez les matrices de confusion (2×3)</li>
             <li>Analysez les performances globales</li>
         </ul>
-        <a href="/2_📊_Evaluation" target="_self" class="btn-primary {"btn-disabled" if feature_disabled else ""}" {'style="pointer-events: none; opacity: 0.5;"' if feature_disabled else ""}>
+        <a href="/Evaluation" target="_self" class="btn-primary {"btn-disabled" if feature_disabled else ""}" {'style="pointer-events: none; opacity: 0.5;"' if feature_disabled else ""}>
             {"🔒 " if feature_disabled else "📈 "}Accéder au Benchmark
         </a>
     </div>
