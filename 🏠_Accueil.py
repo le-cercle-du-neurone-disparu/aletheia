@@ -30,7 +30,14 @@ st.markdown(
         backdrop-filter: none !important;
         border-bottom: 1px solid #d6d9e0 !important;
     }
-    [data-testid="stTopNavSection"] { justify-content: center; }
+    /* La rangée de liens est le .rc-overflow du header : stTopNavLinkContainer
+       n'enveloppe qu'un lien, le centrer ne déplacerait donc rien. Les classes
+       st-emotion-cache-* changent d'un build à l'autre et ne sont pas des
+       points d'accroche. */
+    header[data-testid="stHeader"] .rc-overflow {
+        width: 100%;
+        justify-content: center;
+    }
     [data-testid="stTopNavLink"],
     [data-testid="stTopNavLink"] * {
         color: #1a1a2e !important;
