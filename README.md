@@ -46,6 +46,10 @@ L'app résout l'URL du backend dans cet ordre : secrets Streamlit, puis
 `BERLUE_API_URL` de l'environnement (`.env`), puis `http://localhost:8000`.
 Le voyant de la page d'accueil affiche l'environnement actif.
 
+`.streamlit/secrets.toml` est ignoré par git non pas parce qu'il contiendrait
+un secret, mais parce qu'il prime sur `.env` : versionné, il forcerait le
+backend distant à tous ceux qui clonent le dépôt.
+
 | Environnement | App | Backend | Source de l'URL |
 | --- | --- | --- | --- |
 | `local` | poste de dev, `make run_app` | `berlue` sur la même machine | `.env` |
@@ -69,10 +73,14 @@ authentifiés (`--allow-unauthenticated`), sans quoi Streamlit reçoit un 403.
    - Main file path : `🏠_Accueil.py`
 3. *Advanced settings* → Python 3.14, la version du projet
    (`PYTHON_VERSION` dans `make/local.mk`, et celle de la CI).
-4. *Advanced settings* → *Secrets* : coller le contenu de
-   `.streamlit/secrets.toml.example`, en remplaçant le gabarit par l'URL que
-   donne `make cloudrun_url` dans `berlue`. Ne jamais committer
-   `.streamlit/secrets.toml` (déjà dans `.gitignore`).
+4. *Advanced settings* → *Secrets* : y déclarer `BERLUE_API_URL`, avec l'URL
+   que donne `make cloudrun_url` dans `berlue` (gabarit :
+   `.streamlit/secrets.toml.example`).
+
+   Malgré son nom, ce panneau ne sert pas ici à cacher quoi que ce soit — une
+   URL Cloud Run publique n'a rien de confidentiel. C'est simplement le seul
+   endroit où injecter une configuration dans une app déployée, `.env` n'étant
+   pas versionné.
 5. Déployer, puis vérifier sur la page d'accueil que le voyant annonce
    l'environnement `cloud` et l'URL Cloud Run — s'il affiche `local`, le secret
    n'a pas été pris en compte.
