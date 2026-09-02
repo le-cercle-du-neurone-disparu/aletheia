@@ -85,14 +85,32 @@ authentifiés (`--allow-unauthenticated`), sans quoi Streamlit reçoit un 403.
    l'environnement `cloud` et l'URL Cloud Run — s'il affiche `local`, le secret
    n'a pas été pris en compte.
 
-Le dépôt étant sous une organisation GitHub, il faut que le compte Streamlit ait
-accès à l'organisation. Cette autorisation se donne au premier déploiement, et
-se vérifie sur
-`https://github.com/settings/connections/applications` (côté compte) ou
-`https://github.com/organizations/le-cercle-du-neurone-disparu/settings/oauth_application_policy`
-(côté organisation) — il n'y a pas d'endpoint d'API pour la lire. En pratique,
-un déploiement qui atteint l'étape `Cloning repository...` dans ses logs prouve
-que l'accès est en place.
+### Autoriser Streamlit sur l'organisation GitHub
+
+Le dépôt appartenant à une organisation, le compte Streamlit doit y avoir accès.
+Streamlit s'intègre comme **OAuth App**, pas comme GitHub App — c'est donc la
+politique OAuth de l'organisation qui décide, et non la liste des GitHub Apps.
+
+Le réglage se trouve dans les paramètres de l'organisation :
+
+> *Settings* → section **Third-party Access** → **OAuth app policy**
+>
+> `https://github.com/organizations/<organisation>/settings/oauth_application_policy`
+
+Deux cas :
+
+- **« Third-party application access is unrestricted »** — rien à faire.
+- **« Access restricted »** — Streamlit doit figurer parmi les applications
+  approuvées. Un membre demande l'accès au premier déploiement, un propriétaire
+  de l'organisation l'approuve depuis cette page.
+
+Côté compte personnel, les autorisations accordées se relisent sur
+`https://github.com/settings/connections/applications`.
+
+Il n'existe pas d'endpoint d'API pour lire cette politique : `orgs/<org>/installations`
+ne renvoie que les GitHub Apps, donc jamais Streamlit. En pratique, un
+déploiement dont les logs atteignent `Cloning repository...` prouve que l'accès
+est en place.
 
 
 ### Tester le backend GCP depuis le poste local
