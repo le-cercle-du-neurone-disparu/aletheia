@@ -3,3 +3,9 @@
 # l'app déployée.
 [client]
 toolbarMode = "minimal"
+
+# Les visuels sont servis comme fichiers plutôt qu'encodés dans la page :
+# l'animation de Berlue pèse 300 Ko, que le navigateur met en cache une fois
+# au lieu de les retélécharger à chaque rendu.
+[server]
+enableStaticServing = true
