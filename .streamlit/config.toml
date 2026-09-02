@@ -1,0 +1,5 @@
+# Barre d'outils réduite : masque le bouton « Deploy » et le menu développeur,
+# qui n'ont d'intérêt pour personne ici — ni en local, ni pour un visiteur de
+# l'app déployée.
+[client]
+toolbarMode = "minimal"

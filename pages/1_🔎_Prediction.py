@@ -159,6 +159,10 @@ st.markdown(
     .verdict-hallucination { background: #f3aaa8; }
     .verdict-incertain { background: #f2e3a3; }
 
+    /* Le bandeau supérieur est vidé de ses boutons (cf. .streamlit/config.toml) :
+       sans cette réduction, il laisse un vide à sa place en haut de page. */
+    .block-container { padding-top: 2.5rem; }
+
     .ligne-analyse {
         /* `inherit` et non --text-primary, qui vaut blanc : ce bloc de style a
            été écrit pour un fond sombre, alors que l'app suit le thème clair de
