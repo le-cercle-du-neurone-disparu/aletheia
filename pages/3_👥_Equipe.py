@@ -45,7 +45,7 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-st.subheader("Berlue")
+st.subheader("Équipe Aletheia / Berlue")
 
 # Chargement des données
 team_members = load_team_data("team.json")
