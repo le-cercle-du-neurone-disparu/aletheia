@@ -681,9 +681,53 @@ if "api_launch_result" not in st.session_state:
 # ==============================================================================
 
 # --- HERO SECTION ---
+# Figures du cadre d'accueil. `get_image_base64` avertit et renvoie None quand
+# le fichier manque : ces visuels sont décoratifs, la page s'affiche sans eux.
+aletheia_base64 = (
+    get_image_base64(Path("assets/aletheia.webp"))
+    if Path("assets/aletheia.webp").exists()
+    else None
+)
+berlue_base64 = (
+    get_image_base64(Path("assets/berlue-accueil.webp"))
+    if Path("assets/berlue-accueil.webp").exists()
+    else None
+)
+
 st.markdown(
     """
+<style>
+    /* Le cadre passe en trois parties : une figure, le texte, une figure. Les
+       z-index gardent les images au-dessus du reflet décoratif du ::before. */
+    .hero-section {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 2.5rem !important;
+    }
+    .hero-contenu { flex: 1 1 auto; position: relative; z-index: 1; }
+    .hero-figure {
+        flex: 0 0 auto;
+        height: 300px;
+        width: auto;
+        border-radius: 14px;
+        position: relative;
+        z-index: 1;
+    }
+    /* Sous cette largeur les figures écraseraient le texte : le titre prime. */
+    @media (max-width: 1100px) {
+        .hero-figure { display: none; }
+    }
+</style>
+""",
+    unsafe_allow_html=True,
+)
+
+st.markdown(
+    f"""
 <div class="hero-section">
+    {f'<img class="hero-figure" src="data:image/webp;base64,{aletheia_base64}" alt="Aletheia">' if aletheia_base64 else ""}
+    <div class="hero-contenu">
     <h1>🏛️ Aletheia</h1>
     <div class="subtitle">Le Moteur de Vérité pour les LLMs</div>
     <div class="tagline">Détection d'hallucinations · Fact-checking automatisé</div>
@@ -692,6 +736,8 @@ st.markdown(
         <span class="hero-badge">🧠 FEVER + SelfCheckGPT</span>
         <span class="hero-badge">🤖 Llama · Mistral</span>
     </div>
+    </div>
+    {f'<img class="hero-figure" src="data:image/webp;base64,{berlue_base64}" alt="Berlue">' if berlue_base64 else ""}
 </div>
 """,
     unsafe_allow_html=True,
