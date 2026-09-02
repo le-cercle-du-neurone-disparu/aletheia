@@ -25,9 +25,29 @@ st.set_page_config(
 API_HEALTH_URL = f"{API_URL}/"
 
 # ==============================================================================
-# FONCTIONS DE VÉRIFICATION ET DE LANCEMENT DE L'API
+# CHARGEMENT DU CSS EXTERNE
 # ==============================================================================
 
+def load_css():
+    """Charge le fichier CSS depuis assets/style.css"""
+    css_paths = [
+        Path("assets/style.css"),
+        Path("style.css"),
+        Path("../assets/style.css"),
+    ]
+    
+    for path in css_paths:
+        if path.exists():
+            with open(path, "r", encoding="utf-8") as f:
+                css = f.read()
+            st.markdown(f"<style>{css}</style>", unsafe_allow_html=True)
+            return True
+    
+    return False
+
+# ==============================================================================
+# FONCTIONS DE VÉRIFICATION DE L'API
+# ==============================================================================
 
 def check_api_health():
     """
@@ -40,635 +60,52 @@ def check_api_health():
     except (requests.ConnectionError, requests.Timeout):
         return False
 
-
 # ==============================================================================
-# STYLES PERSONNALISÉS AVEC IMAGE DE FOND
+# CHARGEMENT DE L'IMAGE DE FOND
 # ==============================================================================
 
-# Fonction pour encoder l'image en base64
 def get_image_base64(image_path):
     """Convertit une image en base64 pour l'utiliser en CSS."""
     try:
         import base64
         with open(image_path, "rb") as f:
             return base64.b64encode(f.read()).decode()
-    except FileNotFoundError:
-        st.warning(f"⚠️ Image non trouvée : {image_path}")
+    except (FileNotFoundError, IOError):
         return None
 
+def get_background_image_style():
+    """Récupère le style CSS pour l'image de fond."""
+    image_paths = [
+        Path("Berlue.png"),
+        Path("assets/Berlue.png"),
+        Path("images/Berlue.png"),
+        Path("../Berlue.png"),
+    ]
+    
+    for path in image_paths:
+        if path.exists():
+            bg_image_base64 = get_image_base64(path)
+            if bg_image_base64:
+                return f"""
+                html, body, .stApp, .stApp > div, .stApp > header, .stApp > .main {{
+                    background-image: url("data:image/png;base64,{bg_image_base64}") !important;
+                    background-size: cover !important;
+                    background-position: center !important;
+                    background-attachment: fixed !important;
+                    background-repeat: no-repeat !important;
+                }}
+                """
+    return ""
 
-# Récupérer l'image - essayons plusieurs chemins possibles
-image_paths = [
-    Path("Berlue.png"),
-    Path("assets/Berlue.png"),
-    Path("images/Berlue.png"),
-    Path("../Berlue.png"),
-]
+# ==============================================================================
+# CHARGEMENT DES STYLES
+# ==============================================================================
 
-bg_image_base64 = None
-for path in image_paths:
-    if path.exists():
-        bg_image_base64 = get_image_base64(path)
-        if bg_image_base64:
-            break
+load_css()
 
-# Construction du style avec arrière-plan
-if bg_image_base64:
-    background_style = f"""
-    /* Forcer l'arrière-plan sur tous les éléments */
-    html, body, .stApp, .stApp > div, .stApp > header, .stApp > .main {{
-        background-image: url("data:image/png;base64,{bg_image_base64}") !important;
-        background-size: cover !important;
-        background-position: center !important;
-        background-attachment: fixed !important;
-        background-repeat: no-repeat !important;
-    }}
-    
-    /* Overlay pour améliorer la lisibilité du contenu */
-    .stApp::before {{
-        content: '';
-        position: fixed !important;
-        top: 0 !important;
-        left: 0 !important;
-        right: 0 !important;
-        bottom: 0 !important;
-        background: rgba(10, 10, 15, 0.85) !important;
-        z-index: 0 !important;
-        pointer-events: none !important;
-    }}
-    
-    /* S'assurer que le contenu est au-dessus de l'overlay */
-    .stApp > div {{
-        position: relative !important;
-        z-index: 1 !important;
-    }}
-    
-    /* Forcer la transparence du header Streamlit */
-    header {{
-        background: rgba(10, 10, 15, 0.7) !important;
-        backdrop-filter: blur(10px) !important;
-        border-bottom: 1px solid rgba(45, 45, 68, 0.3) !important;
-    }}
-    
-    /* Sidebar avec transparence */
-    .css-1d391kg, .css-1lcbmhc, .st-emotion-cache-1d391kg, .st-emotion-cache-1lcbmhc {{
-        background: rgba(10, 10, 15, 0.8) !important;
-        backdrop-filter: blur(10px) !important;
-        border-right: 1px solid rgba(45, 45, 68, 0.3) !important;
-    }}
-    """
-else:
-    background_style = ""
-
-st.markdown(
-    f"""
-<style>
-    /* ===== VARIABLES ===== */
-    :root {{
-        --primary: #667eea;
-        --primary-dark: #5a67d8;
-        --secondary: #764ba2;
-        --success: #48bb78;
-        --warning: #ed8936;
-        --danger: #fc8181;
-        --bg-dark: #0a0a0f;
-        --bg-card: rgba(20, 20, 30, 0.92);
-        --bg-card-hover: rgba(26, 26, 46, 0.95);
-        --text-primary: #ffffff;
-        --text-secondary: #a0aec0;
-        --border-color: rgba(45, 45, 68, 0.8);
-    }}
-
-    /* ===== ARRIÈRE-PLAN ===== */
-    {background_style}
-
-    /* ===== BASE ===== */
-    .stApp {{
-        background: rgba(10, 10, 15, 0.9) !important;
-    }}
-    
-    /* ===== CARTES AVEC FOND TRANSPARENT ===== */
-    .hero-section {{
-        background: linear-gradient(135deg, rgba(102, 126, 234, 0.85) 0%, rgba(118, 75, 162, 0.85) 100%) !important;
-        backdrop-filter: blur(10px) !important;
-        padding: 3.5rem 2.5rem !important;
-        border-radius: 20px !important;
-        text-align: center !important;
-        margin-bottom: 2.5rem !important;
-        position: relative !important;
-        overflow: hidden !important;
-        border: 1px solid rgba(255,255,255,0.1) !important;
-    }}
-    
-    .hero-section::before {{
-        content: '' !important;
-        position: absolute !important;
-        top: -50% !important;
-        right: -20% !important;
-        width: 60% !important;
-        height: 200% !important;
-        background: rgba(255,255,255,0.05) !important;
-        transform: rotate(25deg) !important;
-        pointer-events: none !important;
-    }}
-    
-    .hero-section::after {{
-        content: '✦' !important;
-        position: absolute !important;
-        bottom: 10px !important;
-        right: 30px !important;
-        font-size: 4rem !important;
-        opacity: 0.1 !important;
-        color: white !important;
-    }}
-    
-    .hero-section h1 {{
-        font-size: 4rem !important;
-        font-weight: 800 !important;
-        color: white !important;
-        margin: 0 !important;
-        text-shadow: 0 4px 20px rgba(0,0,0,0.2) !important;
-        letter-spacing: -0.02em !important;
-    }}
-    
-    .hero-section .subtitle {{
-        font-size: 1.4rem !important;
-        color: rgba(255,255,255,0.9) !important;
-        margin-top: 0.5rem !important;
-        font-weight: 300 !important;
-        letter-spacing: 0.02em !important;
-    }}
-    
-    .hero-section .tagline {{
-        font-size: 1.05rem !important;
-        color: rgba(255,255,255,0.75) !important;
-        margin-top: 0.3rem !important;
-        font-weight: 300 !important;
-    }}
-    
-    .hero-section .badge-container {{
-        display: flex !important;
-        justify-content: center !important;
-        gap: 0.8rem !important;
-        margin-top: 1rem !important;
-        flex-wrap: wrap !important;
-    }}
-    
-    .hero-badge {{
-        background: rgba(255,255,255,0.15) !important;
-        backdrop-filter: blur(10px) !important;
-        padding: 0.3rem 1.2rem !important;
-        border-radius: 20px !important;
-        color: white !important;
-        font-size: 0.8rem !important;
-        font-weight: 500 !important;
-        border: 1px solid rgba(255,255,255,0.1) !important;
-    }}
-
-    /* ===== API STATUS CARD ===== */
-    .api-status-card {{
-        background: var(--bg-card) !important;
-        backdrop-filter: blur(10px) !important;
-        border: 1px solid var(--border-color) !important;
-        border-radius: 12px !important;
-        padding: 1.5rem 2rem !important;
-        margin: 1.5rem 0 !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: space-between !important;
-        flex-wrap: wrap !important;
-        gap: 1rem !important;
-        transition: all 0.3s ease !important;
-    }}
-    
-    .api-status-card.status-success {{
-        border-color: var(--success) !important;
-    }}
-    
-    .api-status-card.status-warning {{
-        border-color: var(--warning) !important;
-    }}
-    
-    .api-status-card.status-error {{
-        border-color: var(--danger) !important;
-    }}
-    
-    .api-status-left {{
-        display: flex !important;
-        align-items: center !important;
-        gap: 1rem !important;
-    }}
-    
-    .api-status-icon {{
-        font-size: 2rem !important;
-    }}
-    
-    .api-status-text {{
-        display: flex !important;
-        flex-direction: column !important;
-    }}
-    
-    .api-status-title {{
-        color: var(--text-primary) !important;
-        font-size: 1.1rem !important;
-        font-weight: 600 !important;
-    }}
-    
-    .api-status-desc {{
-        color: var(--text-secondary) !important;
-        font-size: 0.9rem !important;
-    }}
-    
-    .api-status-right {{
-        display: flex !important;
-        gap: 0.8rem !important;
-        align-items: center !important;
-        flex-wrap: wrap !important;
-    }}
-    
-    .btn-launch-api {{
-        background: linear-gradient(135deg, var(--primary), var(--secondary)) !important;
-        color: white !important;
-        border: none !important;
-        padding: 0.6rem 1.8rem !important;
-        border-radius: 8px !important;
-        font-weight: 600 !important;
-        font-size: 0.95rem !important;
-        cursor: pointer !important;
-        transition: all 0.3s ease !important;
-    }}
-    
-    .btn-launch-api:hover {{
-        transform: scale(1.05) !important;
-        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4) !important;
-    }}
-    
-    .btn-launch-api:disabled {{
-        opacity: 0.6 !important;
-        cursor: not-allowed !important;
-        transform: none !important;
-    }}
-    
-    .btn-refresh {{
-        background: var(--bg-card) !important;
-        color: var(--text-secondary) !important;
-        border: 1px solid var(--border-color) !important;
-        padding: 0.6rem 1.2rem !important;
-        border-radius: 8px !important;
-        font-weight: 500 !important;
-        font-size: 0.9rem !important;
-        cursor: pointer !important;
-        transition: all 0.3s ease !important;
-    }}
-    
-    .btn-refresh:hover {{
-        border-color: var(--primary) !important;
-        color: var(--text-primary) !important;
-    }}
-    
-    .status-dot {{
-        display: inline-block !important;
-        width: 10px !important;
-        height: 10px !important;
-        border-radius: 50% !important;
-        margin-right: 8px !important;
-    }}
-    
-    .status-dot.online {{
-        background: var(--success) !important;
-        box-shadow: 0 0 10px rgba(72, 187, 120, 0.5) !important;
-    }}
-    
-    .status-dot.offline {{
-        background: var(--danger) !important;
-        box-shadow: 0 0 10px rgba(252, 129, 129, 0.5) !important;
-    }}
-    
-    .status-dot.warning {{
-        background: var(--warning) !important;
-        box-shadow: 0 0 10px rgba(237, 137, 54, 0.5) !important;
-    }}
-
-    /* ===== STATS ===== */
-    .stats-grid {{
-        display: grid !important;
-        grid-template-columns: repeat(4, 1fr) !important;
-        gap: 1rem !important;
-        margin: 1.5rem 0 !important;
-    }}
-    
-    .stat-card {{
-        background: var(--bg-card) !important;
-        backdrop-filter: blur(10px) !important;
-        border: 1px solid var(--border-color) !important;
-        border-radius: 12px !important;
-        padding: 1.2rem !important;
-        text-align: center !important;
-        transition: all 0.3s ease !important;
-    }}
-    
-    .stat-card:hover {{
-        transform: translateY(-2px) !important;
-        border-color: var(--primary) !important;
-        box-shadow: 0 8px 30px rgba(102, 126, 234, 0.15) !important;
-    }}
-    
-    .stat-number {{
-        font-size: 2.5rem !important;
-        font-weight: 700 !important;
-        background: linear-gradient(135deg, var(--primary), var(--secondary)) !important;
-        -webkit-background-clip: text !important;
-        -webkit-text-fill-color: transparent !important;
-        line-height: 1.2 !important;
-    }}
-    
-    .stat-label {{
-        color: var(--text-secondary) !important;
-        font-size: 0.85rem !important;
-        margin-top: 0.2rem !important;
-        font-weight: 400 !important;
-    }}
-    
-    /* ===== SECTION TITLE ===== */
-    .section-title {{
-        font-size: 1.8rem !important;
-        font-weight: 700 !important;
-        color: var(--text-primary) !important;
-        margin: 2rem 0 1rem 0 !important;
-        letter-spacing: -0.02em !important;
-        text-shadow: 0 2px 10px rgba(0,0,0,0.5) !important;
-    }}
-    
-    .section-subtitle {{
-        color: var(--text-secondary) !important;
-        font-size: 1.05rem !important;
-        margin-bottom: 1.5rem !important;
-    }}
-    
-    /* ===== PROCESS STEPS ===== */
-    .process-grid {{
-        display: grid !important;
-        grid-template-columns: repeat(4, 1fr) !important;
-        gap: 1rem !important;
-        margin: 1.5rem 0 !important;
-    }}
-    
-    .process-step {{
-        background: var(--bg-card) !important;
-        backdrop-filter: blur(10px) !important;
-        border: 1px solid var(--border-color) !important;
-        border-radius: 12px !important;
-        padding: 1.5rem !important;
-        text-align: center !important;
-        transition: all 0.3s ease !important;
-        position: relative !important;
-    }}
-    
-    .process-step:hover {{
-        border-color: var(--primary) !important;
-        transform: translateY(-4px) !important;
-    }}
-    
-    .process-step .step-number {{
-        display: inline-block !important;
-        background: linear-gradient(135deg, var(--primary), var(--secondary)) !important;
-        color: white !important;
-        width: 32px !important;
-        height: 32px !important;
-        border-radius: 50% !important;
-        line-height: 32px !important;
-        font-size: 0.9rem !important;
-        font-weight: 700 !important;
-        margin-bottom: 0.5rem !important;
-    }}
-    
-    .process-step .step-icon {{
-        font-size: 2.5rem !important;
-        margin: 0.3rem 0 !important;
-    }}
-    
-    .process-step .step-title {{
-        color: var(--text-primary) !important;
-        font-size: 1rem !important;
-        font-weight: 600 !important;
-    }}
-    
-    .process-step .step-desc {{
-        color: var(--text-secondary) !important;
-        font-size: 0.85rem !important;
-        margin-top: 0.3rem !important;
-        line-height: 1.5 !important;
-    }}
-    
-    /* ===== FEATURE CARDS ===== */
-    .feature-grid {{
-        display: grid !important;
-        grid-template-columns: 1fr 1fr !important;
-        gap: 1.5rem !important;
-        margin: 1.5rem 0 !important;
-    }}
-    
-    .feature-card {{
-        background: var(--bg-card) !important;
-        backdrop-filter: blur(10px) !important;
-        border: 1px solid var(--border-color) !important;
-        border-radius: 14px !important;
-        padding: 2rem !important;
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
-        position: relative !important;
-        overflow: hidden !important;
-        height: 100% !important;
-        display: flex !important;
-        flex-direction: column !important;
-    }}
-    
-    .feature-card::before {{
-        content: '' !important;
-        position: absolute !important;
-        top: 0 !important;
-        left: 0 !important;
-        right: 0 !important;
-        height: 3px !important;
-        background: linear-gradient(90deg, var(--primary), var(--secondary)) !important;
-        opacity: 0 !important;
-        transition: opacity 0.3s ease !important;
-    }}
-    
-    .feature-card:hover {{
-        transform: translateY(-6px) !important;
-        border-color: var(--primary) !important;
-        box-shadow: 0 12px 40px rgba(102, 126, 234, 0.2) !important;
-    }}
-    
-    .feature-card:hover::before {{
-        opacity: 1 !important;
-    }}
-    
-    .feature-card .icon {{
-        font-size: 2.5rem !important;
-        margin-bottom: 0.5rem !important;
-    }}
-    
-    .feature-card h3 {{
-        color: var(--text-primary) !important;
-        font-size: 1.3rem !important;
-        font-weight: 600 !important;
-        margin: 0.5rem 0 !important;
-    }}
-    
-    .feature-card .description {{
-        color: var(--text-secondary) !important;
-        font-size: 0.95rem !important;
-        line-height: 1.6 !important;
-        flex-grow: 1 !important;
-    }}
-    
-    .feature-card ul {{
-        color: var(--text-secondary) !important;
-        font-size: 0.9rem !important;
-        padding-left: 1.2rem !important;
-        margin: 0.5rem 0 1rem 0 !important;
-        list-style: none !important;
-    }}
-    
-    .feature-card ul li {{
-        padding: 0.25rem 0 !important;
-        position: relative !important;
-        padding-left: 1.5rem !important;
-    }}
-    
-    .feature-card ul li::before {{
-        content: '▸' !important;
-        position: absolute !important;
-        left: 0 !important;
-        color: var(--primary) !important;
-        font-weight: bold !important;
-    }}
-    
-    .feature-card .btn-primary {{
-        background: linear-gradient(135deg, var(--primary), var(--secondary)) !important;
-        color: white !important;
-        border: none !important;
-        padding: 0.6rem 2rem !important;
-        border-radius: 8px !important;
-        font-weight: 500 !important;
-        font-size: 0.95rem !important;
-        cursor: pointer !important;
-        transition: all 0.3s ease !important;
-        text-align: center !important;
-        margin-top: auto !important;
-        text-decoration: none !important;
-        display: inline-block !important;
-        width: fit-content !important;
-    }}
-    
-    .feature-card .btn-primary:hover {{
-        transform: scale(1.02) !important;
-        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4) !important;
-    }}
-    
-    .feature-card .btn-primary:disabled {{
-        opacity: 0.4 !important;
-        cursor: not-allowed !important;
-        transform: none !important;
-    }}
-    
-    /* ===== ABOUT PROJECT ===== */
-    .about-grid {{
-        display: grid !important;
-        grid-template-columns: repeat(4, 1fr) !important;
-        gap: 1rem !important;
-        margin: 1rem 0 !important;
-    }}
-    
-    .about-item {{
-        background: var(--bg-card) !important;
-        backdrop-filter: blur(10px) !important;
-        border: 1px solid var(--border-color) !important;
-        border-radius: 10px !important;
-        padding: 1.2rem !important;
-        text-align: center !important;
-        transition: all 0.3s ease !important;
-    }}
-    
-    .about-item:hover {{
-        border-color: var(--primary) !important;
-    }}
-    
-    .about-item .label {{
-        color: var(--text-secondary) !important;
-        font-size: 0.75rem !important;
-        text-transform: uppercase !important;
-        letter-spacing: 0.05em !important;
-    }}
-    
-    .about-item .value {{
-        color: var(--text-primary) !important;
-        font-size: 1.1rem !important;
-        font-weight: 500 !important;
-        margin-top: 0.2rem !important;
-    }}
-    
-    .about-item .badge {{
-        display: inline-block !important;
-        background: linear-gradient(135deg, var(--primary), var(--secondary)) !important;
-        color: white !important;
-        padding: 0.1rem 0.8rem !important;
-        border-radius: 20px !important;
-        font-size: 0.75rem !important;
-        font-weight: 500 !important;
-    }}
-    
-    /* ===== FOOTER ===== */
-    .footer {{
-        margin-top: 3rem !important;
-        padding: 2rem 0 1rem 0 !important;
-        border-top: 1px solid var(--border-color) !important;
-        text-align: center !important;
-    }}
-    
-    .footer .disclaimer {{
-        color: var(--text-secondary) !important;
-        font-size: 0.85rem !important;
-        opacity: 0.7 !important;
-        font-style: italic !important;
-    }}
-    
-    .footer .copyright {{
-        color: var(--text-secondary) !important;
-        font-size: 0.8rem !important;
-        opacity: 0.5 !important;
-        margin-top: 0.5rem !important;
-    }}
-    
-    /* ===== RESPONSIVE ===== */
-    @media (max-width: 768px) {{
-        .stats-grid, .process-grid, .about-grid {{
-            grid-template-columns: repeat(2, 1fr) !important;
-        }}
-        .feature-grid {{
-            grid-template-columns: 1fr !important;
-        }}
-        .hero-section h1 {{
-            font-size: 2.5rem !important;
-        }}
-        .api-status-card {{
-            flex-direction: column !important;
-            align-items: stretch !important;
-            text-align: center !important;
-        }}
-        .api-status-left {{
-            flex-direction: column !important;
-        }}
-        .api-status-right {{
-            justify-content: center !important;
-            flex-wrap: wrap !important;
-        }}
-    }}
-</style>
-""",
-    unsafe_allow_html=True,
-)
+bg_style = get_background_image_style()
+if bg_style:
+    st.markdown(f"<style>{bg_style}</style>", unsafe_allow_html=True)
 
 # ==============================================================================
 # INITIALISATION DE L'ÉTAT DE SESSION
@@ -690,7 +127,7 @@ st.markdown(
     <h1>🏛️ Aletheia</h1>
     <div class="subtitle">Le Moteur de Vérité pour les LLMs</div>
     <div class="tagline">Détection d'hallucinations · Fact-checking automatisé</div>
-    <div class="badge-container">
+    <div class="hero-badge-container">
         <span class="hero-badge">🔍 Berlue v1.0</span>
         <span class="hero-badge">🧠 FEVER + SelfCheckGPT</span>
         <span class="hero-badge">🤖 Llama · Mistral</span>
@@ -704,10 +141,8 @@ st.markdown(
 # VÉRIFICATION DE L'API BERLUE
 # ==============================================================================
 
-# Vérifier l'état de l'API
 api_online = check_api_health()
 
-# Déterminer le statut
 if api_online:
     status_icon = "🟢"
     status_title = "API Berlue connectée"
@@ -721,7 +156,6 @@ else:
     status_class = "status-error"
     status_dot = "offline"
 
-# Afficher la carte de statut
 st.markdown(
     f"""
 <div class="api-status-card {status_class}">
@@ -736,26 +170,13 @@ st.markdown(
         </div>
     </div>
     <div class="api-status-right">
-""",
-    unsafe_allow_html=True,
-)
-
-st.markdown(
-    """
-    <button class="btn-refresh" onclick="location.reload()">🔄 Rafraîchir</button>
-""",
-    unsafe_allow_html=True,
-)
-
-st.markdown(
-    """
+        <button class="btn-refresh" onclick="location.reload()">🔄 Rafraîchir</button>
     </div>
 </div>
 """,
     unsafe_allow_html=True,
 )
 
-# Si l'API n'est pas disponible, désactiver les liens vers les autres pages
 feature_disabled = not api_online
 
 # --- STATISTIQUES ---
@@ -785,14 +206,63 @@ st.markdown(
 
 st.divider()
 
-# --- DESCRIPTION ---
+# ==============================================================================
+# DESCRIPTION - VERSION AMÉLIORÉE
+# ==============================================================================
+
 st.markdown(
     """
-<p style="color: #a0aec0; font-size: 1.1rem; text-align: center; max-width: 800px; margin: 0 auto;">
-    <strong>Aletheia</strong> est votre tableau de bord interactif pour auditer, tester et évaluer 
-    les grands modèles de langage (LLMs). Grâce au moteur de fact-checking <strong>Berlue</strong> 
-    en arrière-plan, cette plateforme vous permet de mesurer la fiabilité des réponses générées.
-</p>
+<div style="
+    background: rgba(20, 20, 30, 0.40);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 20px;
+    padding: 2.5rem 3rem;
+    margin: 1.5rem auto;
+    max-width: 900px;
+    text-align: center;
+    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.30);
+    transition: all 0.3s ease;
+">
+    <div style="
+        font-size: 1.2rem;
+        color: #f0f4ff;
+        line-height: 1.9;
+        text-shadow: 0 2px 30px rgba(0, 0, 0, 0.95);
+    ">
+        <span style="
+            font-size: 2rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #667eea, #764ba2, #f093fb);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: none;
+            filter: drop-shadow(0 2px 20px rgba(102, 126, 234, 0.30));
+        ">Aletheia</span>
+        <span style="color: #ffffff; text-shadow: 0 2px 25px rgba(0, 0, 0, 0.95);">
+            est votre tableau de bord interactif pour auditer, tester et évaluer 
+            les grands modèles de langage (LLMs).
+        </span>
+    </div>
+    <div style="
+        margin-top: 1rem;
+        font-size: 1.1rem;
+        color: #e8ecff;
+        line-height: 1.8;
+        text-shadow: 0 2px 25px rgba(0, 0, 0, 0.95);
+        opacity: 0.90;
+    ">
+        Grâce au moteur de fact-checking 
+        <span style="
+            color: #a8b5f0;
+            font-weight: 600;
+            text-shadow: 0 2px 25px rgba(168, 181, 240, 0.30);
+        ">Berlue</span> 
+        en arrière-plan, cette plateforme vous permet de mesurer la fiabilité des réponses générées.
+    </div>
+</div>
 """,
     unsafe_allow_html=True,
 )
@@ -813,25 +283,25 @@ st.markdown(
 <div class="process-grid">
     <div class="process-step">
         <div class="step-number">1</div>
-        <div class="step-icon">❓</div>
+        <span class="step-icon">❓</span>
         <div class="step-title">Question</div>
         <div class="step-desc">L'utilisateur pose une question à un LLM local</div>
     </div>
     <div class="process-step">
         <div class="step-number">2</div>
-        <div class="step-icon">✂️</div>
+        <span class="step-icon">✂️</span>
         <div class="step-title">Découpage</div>
         <div class="step-desc">Berlue découpe la réponse en affirmations</div>
     </div>
     <div class="process-step">
         <div class="step-number">3</div>
-        <div class="step-icon">🔍</div>
+        <span class="step-icon">🔍</span>
         <div class="step-title">Vérification</div>
         <div class="step-desc">RAG inversé + auto-cohérence (SelfCheckGPT)</div>
     </div>
     <div class="process-step">
         <div class="step-number">4</div>
-        <div class="step-icon">🎯</div>
+        <span class="step-icon">🎯</span>
         <div class="step-title">Résultat</div>
         <div class="step-desc">Surlignage vert/orange/rouge avec preuves</div>
     </div>
@@ -847,10 +317,69 @@ st.markdown(
     '<div class="section-title">🚀 Explorez Aletheia</div>', unsafe_allow_html=True
 )
 
-# Désactiver les liens si l'API n'est pas disponible
+# ==============================================================================
+# ALERTE API INDISPONIBLE - VERSION AMÉLIORÉE
+# ==============================================================================
+
 if feature_disabled:
-    st.warning(
-        "⚠️ L'API Berlue n'est pas disponible. Lancez l'API ci-dessus pour accéder aux fonctionnalités de prédiction et d'évaluation."
+    st.markdown(
+        """
+<div style="
+    background: linear-gradient(135deg, rgba(255, 70, 70, 0.10), rgba(255, 150, 50, 0.06));
+    border: 1px solid rgba(255, 70, 70, 0.18);
+    border-radius: 16px;
+    padding: 1.2rem 1.8rem;
+    margin: 0.5rem 0 1.5rem 0;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    box-shadow: 0 4px 30px rgba(255, 70, 70, 0.06);
+    transition: all 0.3s ease;
+">
+    <div style="font-size: 2.2rem; flex-shrink: 0;">⚠️</div>
+    <div style="flex: 1;">
+        <div style="color: #ff6b6b; font-weight: 600; font-size: 1.05rem; text-shadow: 0 2px 20px rgba(0,0,0,0.9);">
+            API Berlue indisponible
+        </div>
+        <div style="color: #f0f4ff; font-size: 0.95rem; opacity: 0.85; text-shadow: 0 2px 15px rgba(0,0,0,0.9);">
+            Le serveur API n'est pas accessible. Lancez l'API avec 
+            <code style="
+                background: rgba(255,255,255,0.08); 
+                padding: 0.15rem 0.7rem; 
+                border-radius: 6px; 
+                color: #a8b5f0;
+                font-size: 0.9rem;
+                font-weight: 500;
+                text-shadow: 0 2px 10px rgba(0,0,0,0.8);
+            ">uv run api.py</code> 
+            pour débloquer les fonctionnalités.
+        </div>
+    </div>
+    <div style="flex-shrink: 0;">
+        <button onclick="location.reload()" style="
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.10);
+            color: white;
+            padding: 0.5rem 1.5rem;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            text-shadow: 0 2px 10px rgba(0,0,0,0.6);
+        "
+        onmouseover="this.style.background='rgba(255,255,255,0.12)'; this.style.borderColor='rgba(255,255,255,0.20)'"
+        onmouseout="this.style.background='rgba(255,255,255,0.06)'; this.style.borderColor='rgba(255,255,255,0.10)'">
+            🔄 Rafraîchir
+        </button>
+    </div>
+</div>
+""",
+        unsafe_allow_html=True,
     )
 
 st.markdown(
@@ -866,7 +395,7 @@ st.markdown(
             <li>Identifiez les hallucinations avec code couleur</li>
             <li>Vérifiez les sources utilisées pour chaque affirmation</li>
         </ul>
-        <a href="/Prediction" target="_self" class="btn-primary {"btn-disabled" if feature_disabled else ""}" {'style="pointer-events: none; opacity: 0.5;"' if feature_disabled else ""}>
+        <a href="/Prediction" target="_self" class="btn-primary {"btn-disabled" if feature_disabled else ""}" {'style="pointer-events: none; opacity: 0.40;"' if feature_disabled else ""}>
             {"🔒 " if feature_disabled else "🔍 "}Accéder à l'Explorateur
         </a>
     </div>
@@ -880,7 +409,7 @@ st.markdown(
             <li>Visualisez les matrices de confusion (2×3)</li>
             <li>Analysez les performances globales</li>
         </ul>
-        <a href="/Evaluation" target="_self" class="btn-primary {"btn-disabled" if feature_disabled else ""}" {'style="pointer-events: none; opacity: 0.5;"' if feature_disabled else ""}>
+        <a href="/Evaluation" target="_self" class="btn-primary {"btn-disabled" if feature_disabled else ""}" {'style="pointer-events: none; opacity: 0.40;"' if feature_disabled else ""}>
             {"🔒 " if feature_disabled else "📈 "}Accéder au Benchmark
         </a>
     </div>
