@@ -261,16 +261,18 @@ if st.button(
                             st.info("ℹ️ Aucune affirmation vérifiable trouvée.")
                         else:
                             # Stats
-                            total = len(claims)
-                            verified = sum(
-                                1 for c in claims if c.get("status") == "green"
-                            )
-                            hallucinated = sum(
-                                1 for c in claims if c.get("status") == "red"
-                            )
-                            uncertain = sum(
-                                1 for c in claims if c.get("status") == "unknown"
-                            )
+                            # Même classement que les cartes plus bas : tout ce
+                            # qui n'est ni green ni red est incertain. Compter
+                            # « unknown » à la place laisserait un statut
+                            # inattendu hors des trois totaux, qui ne feraient
+                            # alors plus la somme des affirmations.
+                            statuses = [
+                                c.get("status", "unknown").lower() for c in claims
+                            ]
+                            total = len(statuses)
+                            verified = statuses.count("green")
+                            hallucinated = statuses.count("red")
+                            uncertain = total - verified - hallucinated
 
                             col_ok, col_ko, col_unk = st.columns(3)
                             with col_ok:
