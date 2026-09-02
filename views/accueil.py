@@ -557,6 +557,14 @@ st.markdown(
     .about-item:hover {{
         border-color: var(--primary) !important;
     }}
+
+    .about-item .detail {{
+        color: var(--text-secondary) !important;
+        font-size: 0.82rem !important;
+        line-height: 1.5 !important;
+        margin-top: 0.6rem !important;
+        text-align: left !important;
+    }}
     
     .about-item .label {{
         color: var(--text-secondary) !important;
@@ -779,10 +787,6 @@ feature_disabled = not api_online
 st.markdown(
     '<div class="section-title">⚡ Le Processus Berlue</div>', unsafe_allow_html=True
 )
-st.markdown(
-    '<div class="section-subtitle">Vérification d\'hallucinations en 4 étapes</div>',
-    unsafe_allow_html=True,
-)
 
 st.markdown(
     """
@@ -869,27 +873,42 @@ st.divider()
 
 # --- À PROPOS DU PROJET ---
 st.markdown(
-    '<div class="section-title">📖 À propos du projet</div>', unsafe_allow_html=True
-)
-
-st.markdown(
     """
 <div class="about-grid">
     <div class="about-item">
         <div class="label">Moteur de vérification</div>
         <div class="value">Berlue <span class="badge">v1.0</span></div>
+        <div class="detail">
+            L'API qui découpe la réponse du modèle en affirmations vérifiables,
+            confronte chacune aux sources, puis rend un verdict et un score de
+            confiance.
+        </div>
     </div>
     <div class="about-item">
         <div class="label">Méthode de détection</div>
         <div class="value">FEVER + SelfCheckGPT <span class="badge">Hybride</span></div>
+        <div class="detail">
+            Deux avis indépendants : le RAG cherche une preuve dans le corpus
+            FEVER, SelfCheckGPT mesure si le modèle se contredit d'un
+            échantillon à l'autre. La fusion tranche.
+        </div>
     </div>
     <div class="about-item">
         <div class="label">Datasets d'évaluation</div>
         <div class="value">HaluEval · TruthfulQA</div>
+        <div class="detail">
+            Jeux de questions dont la réponse attendue est connue : ils servent
+            à mesurer ce que Berlue détecte vraiment, plutôt qu'à le supposer.
+        </div>
     </div>
     <div class="about-item">
         <div class="label">Modèles supportés</div>
-        <div class="value">Llama · Mistral <span class="badge">+ en cours</span></div>
+        <div class="value">Tous les modèles Ollama</div>
+        <div class="detail">
+            Llama, Mistral, Qwen, Gemma, Phi… tout ce que sert le serveur
+            Ollama configuré. La liste du sélecteur vient de lui, elle suit donc
+            ce qui y est réellement installé.
+        </div>
     </div>
 </div>
 """,
