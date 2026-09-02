@@ -27,18 +27,22 @@ st.markdown(
 <style>
     /* Marge haute par défaut de Streamlit : elle laisse un vide sous le menu,
        qui n'a plus lieu d'être depuis que la navigation occupe le header. */
-    .block-container { padding-top: 2.5rem; }
+    .block-container { padding-top: 5rem; }
+
+    /* Le header étant hors flux, la colonne passerait dessous sans ce dégagement. */
+    section[data-testid="stSidebar"] > div { padding-top: 3.5rem; }
 
     /* Le conteneur est une rangée flex dont la barre latérale est le premier
        élément : le header, placé après, se retrouvait décalé de sa largeur.
-       En le renvoyant en tête sur une ligne pleine, la colonne repart dessous. */
-    [data-testid="stAppViewContainer"] {
-        flex-wrap: wrap;
-        align-content: flex-start;
-    }
+       `fixed` le sort de cette rangée — le faire passer en tête avec un
+       flex-wrap renvoyait le contenu sous la colonne dès qu'elle s'ouvrait. */
     header[data-testid="stHeader"] {
-        order: -1;
-        width: 100% !important;
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        width: 100vw !important;
+        z-index: 999999 !important;
         background: #f0f2f6 !important;
         backdrop-filter: none !important;
         border-bottom: 1px solid #d6d9e0 !important;
@@ -82,21 +86,27 @@ st.navigation(PAGES, position="top").run()
 st.markdown(
     """
 <style>
+    /* Même bandeau que le menu : fond et bordure repris du header pour que les
+       deux barres se répondent. Il occupe sa colonne et non 100vw — décalé par
+       la barre latérale, un bloc pleine fenêtre déborderait sur la droite. */
     .pied-de-page {
-        margin-top: 3rem;
-        padding: 1.5rem 0 1rem 0;
-        border-top: 1px solid rgba(128, 128, 128, 0.25);
+        margin: 3rem 0 0 0;
+        width: 100%;
+        padding: 0.9rem 1rem;
+        background: #f0f2f6;
+        border-top: 1px solid #d6d9e0;
         text-align: center;
+        color: #1a1a2e;
     }
     .pied-de-page .avertissement {
         font-size: 0.85rem;
-        opacity: 0.75;
         font-style: italic;
+        opacity: 0.85;
     }
     .pied-de-page .mentions {
         font-size: 0.8rem;
-        opacity: 0.55;
-        margin-top: 0.4rem;
+        opacity: 0.6;
+        margin-top: 0.25rem;
     }
 </style>
 <div class="pied-de-page">
