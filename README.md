@@ -111,8 +111,6 @@ se vérifie sur
 un déploiement qui atteint l'étape `Cloning repository...` dans ses logs prouve
 que l'accès est en place.
 
-`requirements.txt` ne doit jamais contenir `aletheia` : un paquet homonyme sans
-rapport existe sur PyPI, et `pip freeze` après un `pip install -e .` l'y réinjecte.
 
 ### Tester le backend GCP depuis le poste local
 
