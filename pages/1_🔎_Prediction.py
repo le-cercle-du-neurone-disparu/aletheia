@@ -3,6 +3,8 @@ Page de prédiction — Aletheia.
 Avec présentation du processus Berlue.
 """
 
+import html
+
 import requests
 import streamlit as st
 
@@ -115,10 +117,92 @@ st.markdown(
         font-weight: 700;
         flex-shrink: 0;
     }
+
+    /* Liste des verdicts : un <details> natif par affirmation. La ligne entière
+       est cliquable et le détail s'ouvre dessous, sans réexécution du script —
+       un st.expander imposerait son propre cadre et interdirait le fond coloré. */
+    .verdict {
+        border-radius: 8px;
+        margin-bottom: 0.45rem;
+        overflow: hidden;
+    }
+    .verdict > summary {
+        list-style: none;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        padding: 0.7rem 1rem;
+        color: #111111;
+        font-size: 0.95rem;
+        line-height: 1.4;
+    }
+    .verdict > summary::-webkit-details-marker { display: none; }
+    .verdict > summary::marker { content: ""; }
+    .verdict > summary:hover { filter: brightness(0.96); }
+    .verdict .loupe { flex: 0 0 auto; font-size: 0.95rem; }
+    .verdict .libelle { flex: 1 1 auto; }
+    .verdict .score {
+        flex: 0 0 auto;
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+        opacity: 0.7;
+    }
+    .verdict .detail {
+        padding: 0 1rem 0.85rem 2.5rem;
+        color: #111111;
+        font-size: 0.88rem;
+        line-height: 1.55;
+    }
+    .verdict .detail b { font-weight: 700; }
+    .verdict-vrai { background: #b7e4b0; }
+    .verdict-hallucination { background: #f3aaa8; }
+    .verdict-incertain { background: #f2e3a3; }
+
+    .ligne-analyse {
+        color: var(--text-primary);
+        font-size: 0.95rem;
+        margin: 0.2rem 0 0.9rem 0;
+    }
 </style>
 """,
     unsafe_allow_html=True,
 )
+
+
+def construire_verdict(claim: dict) -> str:
+    """Une affirmation, en <details> repliable.
+
+    L'élément est natif : la ligne s'ouvre sans réexécuter le script, là où un
+    st.expander imposerait son propre cadre et un aller-retour serveur par clic.
+    """
+    statut = claim.get("status", "unknown").lower()
+    if statut == "green":
+        classe, etiquette = "verdict-vrai", "Vrai"
+    elif statut == "red":
+        classe, etiquette = "verdict-hallucination", "Hallucination"
+    else:
+        classe, etiquette = "verdict-incertain", "Incertain"
+
+    score = claim.get("fusion_score")
+    score_affiche = f"[{score:.2f}]" if isinstance(score, int | float) else "[—]"
+
+    texte = html.escape(str(claim.get("claim_text", "N/A")))
+    source = html.escape(str(claim.get("evidence_source", "N/A")))
+    preuve = html.escape(str(claim.get("evidence_text", "N/A")))
+
+    # Sur une seule ligne : indenté, le bloc deviendrait du code pour Markdown,
+    # que st.markdown interprète avant de rendre le HTML.
+    return (
+        f'<details class="verdict {classe}">'
+        f'<summary><span class="loupe">🔍</span>'
+        f'<span class="libelle">{texte}</span>'
+        f'<span class="score">{score_affiche}</span></summary>'
+        f'<div class="detail"><b>Verdict :</b> {etiquette}<br>'
+        f"<b>Source :</b> {source}<br>"
+        f"<b>Preuve :</b> {preuve}</div>"
+        f"</details>"
+    )
 
 
 def afficher_debug(result: dict) -> None:
@@ -384,102 +468,39 @@ if st.button(
                         f"{provenance}"
                     )
 
-                    col1, col2 = st.columns([1, 1.5])
+                    st.subheader("🤖 Réponse du Modèle")
+                    with st.container(border=True):
+                        st.markdown(
+                            result.get("full_llm_answer", "Aucune réponse générée.")
+                        )
 
-                    # Réponse
-                    with col1:
-                        st.subheader("🤖 Réponse du Modèle")
-                        with st.container(border=True):
-                            st.markdown(
-                                result.get("full_llm_answer", "Aucune réponse générée.")
-                            )
+                    st.subheader("🛡️ Vérification des Affirmations")
 
-                    # Claims
-                    with col2:
-                        st.subheader("🛡️ Vérification des Affirmations")
+                    claims = result.get("claims", [])
 
-                        claims = result.get("claims", [])
+                    if not claims:
+                        st.info("ℹ️ Aucune affirmation vérifiable trouvée.")
+                    else:
+                        # Tout ce qui n'est ni green ni red est incertain, comme
+                        # dans la liste plus bas : compter un statut nommé à la
+                        # place laisserait une valeur inattendue hors des trois
+                        # totaux, qui ne feraient alors plus la somme.
+                        statuses = [c.get("status", "unknown").lower() for c in claims]
+                        verified = statuses.count("green")
+                        hallucinated = statuses.count("red")
+                        uncertain = len(statuses) - verified - hallucinated
 
-                        if not claims:
-                            st.info("ℹ️ Aucune affirmation vérifiable trouvée.")
-                        else:
-                            # Stats
-                            # Même classement que les cartes plus bas : tout ce
-                            # qui n'est ni green ni red est incertain. Compter
-                            # « unknown » à la place laisserait un statut
-                            # inattendu hors des trois totaux, qui ne feraient
-                            # alors plus la somme des affirmations.
-                            statuses = [
-                                c.get("status", "unknown").lower() for c in claims
-                            ]
-                            total = len(statuses)
-                            verified = statuses.count("green")
-                            hallucinated = statuses.count("red")
-                            uncertain = total - verified - hallucinated
+                        st.markdown(
+                            f'<div class="ligne-analyse"><b>Analyse :</b> '
+                            f"[{verified} vrai / {hallucinated} hallucination / "
+                            f"{uncertain} incertain]</div>",
+                            unsafe_allow_html=True,
+                        )
 
-                            col_ok, col_ko, col_unk = st.columns(3)
-                            with col_ok:
-                                st.metric(
-                                    "✅ Vrai",
-                                    verified,
-                                    delta=f"{verified / total * 100:.0f}%",
-                                )
-                            with col_ko:
-                                st.metric(
-                                    "❌ Hallucination",
-                                    hallucinated,
-                                    delta=f"{hallucinated / total * 100:.0f}%",
-                                )
-                            with col_unk:
-                                st.metric(
-                                    "⚠️ Incertain",
-                                    uncertain,
-                                    delta=f"{uncertain / total * 100:.0f}%",
-                                )
-
-                            st.divider()
-
-                            # Affichage
-                            for idx, claim in enumerate(claims, 1):
-                                status = claim.get("status", "unknown").lower()
-
-                                if status == "green":
-                                    color_class = "claim-green"
-                                    badge = '<span class="status-badge badge-green">✅ Vrai</span>'
-                                elif status == "red":
-                                    color_class = "claim-red"
-                                    badge = '<span class="status-badge badge-red">❌ Hallucination</span>'
-                                else:
-                                    color_class = "claim-yellow"
-                                    badge = '<span class="status-badge badge-yellow">⚠️ Incertain</span>'
-
-                                st.markdown(
-                                    f"""
-                                <div class="claim-card {color_class}">
-                                    <div class="claim-header">
-                                        <span style="font-weight: 600; color: var(--text-secondary); font-size: 0.85rem;">
-                                            Affirmation #{idx}
-                                        </span>
-                                        {badge}
-                                    </div>
-                                    <div class="claim-text">{claim.get("claim_text", "N/A")}</div>
-                                </div>
-                                """,
-                                    unsafe_allow_html=True,
-                                )
-
-                                with st.expander(
-                                    f"📋 Détails (Score: {claim.get('fusion_score', 0):.2f})"
-                                ):
-                                    st.markdown(
-                                        f"**Source :** `{claim.get('evidence_source', 'N/A')}`"
-                                    )
-                                    st.markdown(
-                                        f"**Preuve :** {claim.get('evidence_text', 'N/A')}"
-                                    )
-                                    st.markdown(
-                                        f"**Score de confiance :** {claim.get('fusion_score', 0):.2f}"
-                                    )
+                        st.markdown(
+                            "".join(construire_verdict(claim) for claim in claims),
+                            unsafe_allow_html=True,
+                        )
 
                     if debug:
                         st.divider()
