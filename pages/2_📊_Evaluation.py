@@ -321,7 +321,7 @@ with st.sidebar:
         "Température",
         min_value=0.0,
         max_value=1.0,
-        value=0.7,
+        value=0.0,
         step=0.05,
         label_visibility="collapsed",
     )
