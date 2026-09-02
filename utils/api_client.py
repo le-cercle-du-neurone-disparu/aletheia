@@ -3,6 +3,8 @@ Client HTTP minimal vers l'API Berlue (voir `berlue/berlue/api/fast.py` dans
 le repo `berlue` pour le détail des routes/schémas).
 """
 
+import re
+
 import requests
 import streamlit as st
 
@@ -16,6 +18,34 @@ __all__ = [
     "run_evaluation",
 ]
 
+# Un modèle sans taille lisible dans son tag est trié en dernier : le premier
+# de la liste est celui que `st.selectbox` présélectionne, et on ne veut y
+# mettre que des modèles dont on sait qu'ils sont petits.
+_UNKNOWN_SIZE = float("inf")
+
+
+# La taille est un nombre suivi de « b », isolé dans le tag : `8b`, `0.5b`,
+# `8b-instruct-q4_0`. La borne de fin évite de lire une taille dans un suffixe
+# de quantification comme `q4_0`.
+_SIZE_PATTERN = re.compile(r"(?:^|[-_])(\d+(?:\.\d+)?)(?:x(\d+(?:\.\d+)?))?b(?:$|[-_])")
+
+
+def _model_size(model_name: str) -> float:
+    """
+    Nombre de milliards de paramètres lu dans le tag Ollama d'un modèle.
+
+    `llama3.2:3b` vaut 3, `phi3:14b` vaut 14, `qwen2.5:0.5b` vaut 0.5. Un
+    modèle à experts noté `8x7b` est compté au produit, soit 56.
+    """
+    _, separator, tag = model_name.rpartition(":")
+    if not separator:
+        return _UNKNOWN_SIZE
+    match = _SIZE_PATTERN.search(tag.lower())
+    if not match:
+        return _UNKNOWN_SIZE
+    experts, size = match.group(1), match.group(2)
+    return float(experts) * float(size) if size else float(experts)
+
 
 @st.cache_data(ttl=300)  # Met en cache pendant 5 minutes pour ne pas spammer l'API
 def get_available_llms() -> list[str]:
@@ -25,7 +55,10 @@ def get_available_llms() -> list[str]:
     # borne de 10 s faisait passer un backend sain pour une panne de réseau.
     response = requests.get(f"{API_URL}/llms", timeout=60)
     response.raise_for_status()
-    return response.json()["available_llms"]
+    # Du plus petit au plus grand : le premier élément est présélectionné par
+    # les `st.selectbox` des pages, et doit être le modèle le moins coûteux à
+    # interroger, pas le gros modèle que Berlue utilise pour son pipeline interne.
+    return sorted(response.json()["available_llms"], key=lambda m: (_model_size(m), m))
 
 
 def check_hallucinations(question: str, llm_name: str, temperature: float):
