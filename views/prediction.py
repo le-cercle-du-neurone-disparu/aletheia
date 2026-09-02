@@ -3,9 +3,7 @@ Page de prédiction — Aletheia.
 Avec présentation du processus Berlue.
 """
 
-import base64
 import html
-import pathlib
 
 import requests
 import streamlit as st
@@ -175,17 +173,6 @@ st.markdown(
 )
 
 
-@st.cache_data
-def _berlue_en_envol() -> str:
-    """Image de Berlue encodée en base64, prête à être posée dans du HTML.
-
-    Encodée une fois pour toutes : une lecture disque par analyse n'apporterait
-    rien, le fichier ne change pas en cours d'exécution.
-    """
-    donnees = pathlib.Path("assets/berlue-envol.webp").read_bytes()
-    return base64.b64encode(donnees).decode()
-
-
 def saluer_reponse() -> None:
     """Fait décoller Berlue par-dessus la page, le temps d'une réponse.
 
@@ -193,39 +180,32 @@ def saluer_reponse() -> None:
     derrière lui. La couche est en `pointer-events: none` pour ne jamais
     intercepter un clic, et se retire d'elle-même à la fin de l'animation.
     """
-    try:
-        image = _berlue_en_envol()
-    except FileNotFoundError:
-        # L'animation est un ornement : son absence ne doit pas masquer le
-        # résultat de l'analyse, qui est ce que l'utilisateur attend.
-        return
-
     st.markdown(
-        f"""
-<div class="berlue-envol"><img src="data:image/webp;base64,{image}" alt=""></div>
+        """
+<div class="berlue-envol"><img src="/app/static/berlue-envol.webp" alt=""></div>
 <style>
-.berlue-envol {{
+.berlue-envol {
     position: fixed;
     inset: 0;
     pointer-events: none;
     z-index: 9999;
     animation: berlue-disparait 2.6s ease-in forwards;
-}}
-.berlue-envol img {{
+}
+.berlue-envol img {
     position: absolute;
     left: 50%;
     bottom: -560px;
     height: 560px;
     transform: translateX(-50%);
     animation: berlue-monte 2.6s cubic-bezier(0.3, 0, 0.5, 1) forwards;
-}}
-@keyframes berlue-monte {{
-    to {{ bottom: 100%; }}
-}}
-@keyframes berlue-disparait {{
-    0%, 70% {{ opacity: 1; }}
-    100% {{ opacity: 0; visibility: hidden; }}
-}}
+}
+@keyframes berlue-monte {
+    to { bottom: 100%; }
+}
+@keyframes berlue-disparait {
+    0%, 70% { opacity: 1; }
+    100% { opacity: 0; visibility: hidden; }
+}
 </style>
 """,
         unsafe_allow_html=True,

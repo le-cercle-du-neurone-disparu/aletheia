@@ -174,7 +174,7 @@ st.markdown(
         position: absolute !important;
         bottom: 10px !important;
         right: 30px !important;
-        font-size: 4rem !important;
+        font-size: 3rem !important;
         opacity: 0.1 !important;
         color: white !important;
     }}
@@ -189,7 +189,7 @@ st.markdown(
     }}
     
     .hero-section .subtitle {{
-        font-size: 1.4rem !important;
+        font-size: 1.15rem !important;
         color: rgba(255,255,255,0.9) !important;
         margin-top: 0.5rem !important;
         font-weight: 300 !important;
@@ -197,7 +197,7 @@ st.markdown(
     }}
     
     .hero-section .tagline {{
-        font-size: 1.05rem !important;
+        font-size: 0.95rem !important;
         color: rgba(255,255,255,0.75) !important;
         margin-top: 0.3rem !important;
         font-weight: 300 !important;
@@ -347,44 +347,10 @@ st.markdown(
     }}
 
     /* ===== STATS ===== */
-    .stats-grid {{
-        display: grid !important;
-        grid-template-columns: repeat(4, 1fr) !important;
-        gap: 1rem !important;
-        margin: 1.5rem 0 !important;
-    }}
     
-    .stat-card {{
-        background: var(--bg-card) !important;
-        backdrop-filter: blur(10px) !important;
-        border: 1px solid var(--border-color) !important;
-        border-radius: 12px !important;
-        padding: 1.2rem !important;
-        text-align: center !important;
-        transition: all 0.3s ease !important;
-    }}
     
-    .stat-card:hover {{
-        transform: translateY(-2px) !important;
-        border-color: var(--primary) !important;
-        box-shadow: 0 8px 30px rgba(102, 126, 234, 0.15) !important;
-    }}
     
-    .stat-number {{
-        font-size: 2.5rem !important;
-        font-weight: 700 !important;
-        background: linear-gradient(135deg, var(--primary), var(--secondary)) !important;
-        -webkit-background-clip: text !important;
-        -webkit-text-fill-color: transparent !important;
-        line-height: 1.2 !important;
-    }}
     
-    .stat-label {{
-        color: var(--text-secondary) !important;
-        font-size: 0.85rem !important;
-        margin-top: 0.2rem !important;
-        font-weight: 400 !important;
-    }}
     
     /* ===== SECTION TITLE ===== */
     .section-title {{
@@ -640,7 +606,7 @@ st.markdown(
     
     /* ===== RESPONSIVE ===== */
     @media (max-width: 768px) {{
-        .stats-grid, .process-grid, .about-grid {{
+        .process-grid, .about-grid {{
             grid-template-columns: repeat(2, 1fr) !important;
         }}
         .feature-grid {{
@@ -681,19 +647,6 @@ if "api_launch_result" not in st.session_state:
 # ==============================================================================
 
 # --- HERO SECTION ---
-# Figures du cadre d'accueil. `get_image_base64` avertit et renvoie None quand
-# le fichier manque : ces visuels sont décoratifs, la page s'affiche sans eux.
-aletheia_base64 = (
-    get_image_base64(Path("assets/aletheia.webp"))
-    if Path("assets/aletheia.webp").exists()
-    else None
-)
-berlue_base64 = (
-    get_image_base64(Path("assets/berlue-accueil.webp"))
-    if Path("assets/berlue-accueil.webp").exists()
-    else None
-)
-
 st.markdown(
     """
 <style>
@@ -706,6 +659,9 @@ st.markdown(
         gap: 2.5rem !important;
     }
     .hero-contenu { flex: 1 1 auto; position: relative; z-index: 1; }
+    /* Streamlit accroche une ancre de lien à chaque titre : elle n'a pas de
+       sens sur une page d'une seule section, et déborde du cadre. */
+    .hero-section a[href^="#"] { display: none !important; }
     .hero-figure {
         flex: 0 0 auto;
         height: 300px;
@@ -718,26 +674,52 @@ st.markdown(
     @media (max-width: 1100px) {
         .hero-figure { display: none; }
     }
+
+    /* Seconde bande, sous le cadre du titre : même famille, en plus discret. */
+    .intro-section {
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.72) 0%, rgba(118, 75, 162, 0.72) 100%);
+        backdrop-filter: blur(10px);
+        padding: 1.6rem 2.5rem;
+        border-radius: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        margin-bottom: 2.5rem;
+        text-align: center;
+    }
+    .intro-section p {
+        color: #ffffff;
+        font-size: 1rem;
+        line-height: 1.6;
+        margin: 0 auto;
+        max-width: 900px;
+    }
 </style>
 """,
     unsafe_allow_html=True,
 )
 
 st.markdown(
-    f"""
+    """
 <div class="hero-section">
-    {f'<img class="hero-figure" src="data:image/webp;base64,{aletheia_base64}" alt="Aletheia">' if aletheia_base64 else ""}
+    <img class="hero-figure" src="/app/static/berlue-idle.webp" alt="Berlue">
     <div class="hero-contenu">
     <h1>🏛️ Aletheia</h1>
     <div class="subtitle">Le Moteur de Vérité pour les LLMs</div>
     <div class="tagline">Détection d'hallucinations · Fact-checking automatisé</div>
     <div class="badge-container">
-        <span class="hero-badge">🔍 Berlue v1.0</span>
         <span class="hero-badge">🧠 FEVER + SelfCheckGPT</span>
-        <span class="hero-badge">🤖 Llama · Mistral</span>
+        <span class="hero-badge">🤖 Llama</span>
     </div>
     </div>
-    {f'<img class="hero-figure" src="data:image/webp;base64,{berlue_base64}" alt="Berlue">' if berlue_base64 else ""}
+    <img class="hero-figure" src="/app/static/aletheia.webp" alt="Aletheia">
+</div>
+
+<div class="intro-section">
+    <p>
+        <strong>Aletheia</strong> est votre tableau de bord interactif pour auditer, tester et
+        évaluer les grands modèles de langage (LLMs). Grâce au moteur de fact-checking
+        <strong>Berlue</strong> en arrière-plan, cette plateforme vous permet de mesurer la
+        fiabilité des réponses générées.
+    </p>
 </div>
 """,
     unsafe_allow_html=True,
@@ -754,17 +736,21 @@ api_online = check_api_health()
 if api_online:
     status_icon = "🟢"
     status_title = "API Berlue connectée"
-    status_desc = f"L'API répond sur {API_URL} (environnement {ENV_NAME})."
+    status_desc = f"Environnement {ENV_NAME}."
     status_class = "status-success"
     status_dot = "online"
 else:
     status_icon = "🔴"
     status_title = "API Berlue injoignable"
-    status_desc = f"Aucune réponse de {API_URL} (environnement {ENV_NAME})."
+    status_desc = f"Aucune réponse du backend (environnement {ENV_NAME})."
     status_class = "status-error"
     status_dot = "offline"
 
 # Afficher la carte de statut
+# Tout en un seul appel : Streamlit referme le conteneur de chaque st.markdown,
+# donc une carte ouverte dans l'un et fermée dans l'autre laisse son contenu
+# retomber en dehors. Le rafraîchissement est un lien et non un bouton à
+# `onclick` : le JavaScript en ligne est retiré à l'assainissement.
 st.markdown(
     f"""
 <div class="api-status-card {status_class}">
@@ -779,19 +765,7 @@ st.markdown(
         </div>
     </div>
     <div class="api-status-right">
-""",
-    unsafe_allow_html=True,
-)
-
-st.markdown(
-    """
-    <button class="btn-refresh" onclick="location.reload()">🔄 Rafraîchir</button>
-""",
-    unsafe_allow_html=True,
-)
-
-st.markdown(
-    """
+        <a class="btn-refresh" href="/" target="_self">🔄 Rafraîchir</a>
     </div>
 </div>
 """,
@@ -800,47 +774,6 @@ st.markdown(
 
 # Si l'API n'est pas disponible, désactiver les liens vers les autres pages
 feature_disabled = not api_online
-
-# --- STATISTIQUES ---
-st.markdown(
-    """
-<div class="stats-grid">
-    <div class="stat-card">
-        <div class="stat-number">4</div>
-        <div class="stat-label">Membres de l'équipe</div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-number">2</div>
-        <div class="stat-label">Modes d'analyse</div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-number">v1.0</div>
-        <div class="stat-label">Version</div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-number">∞</div>
-        <div class="stat-label">Questions possibles</div>
-    </div>
-</div>
-""",
-    unsafe_allow_html=True,
-)
-
-st.divider()
-
-# --- DESCRIPTION ---
-st.markdown(
-    """
-<p style="color: #a0aec0; font-size: 1.1rem; text-align: center; max-width: 800px; margin: 0 auto;">
-    <strong>Aletheia</strong> est votre tableau de bord interactif pour auditer, tester et évaluer 
-    les grands modèles de langage (LLMs). Grâce au moteur de fact-checking <strong>Berlue</strong> 
-    en arrière-plan, cette plateforme vous permet de mesurer la fiabilité des réponses générées.
-</p>
-""",
-    unsafe_allow_html=True,
-)
-
-st.divider()
 
 # --- PROCESSUS BERLUE ---
 st.markdown(
@@ -957,21 +890,6 @@ st.markdown(
     <div class="about-item">
         <div class="label">Modèles supportés</div>
         <div class="value">Llama · Mistral <span class="badge">+ en cours</span></div>
-    </div>
-</div>
-""",
-    unsafe_allow_html=True,
-)
-
-# --- FOOTER ---
-st.markdown(
-    """
-<div class="footer">
-    <div class="disclaimer">
-        ⚠️ Les résultats sont indicatifs et ne remplacent pas une vérification humaine.
-    </div>
-    <div class="copyright">
-        🚀 Propulsé par FastAPI &amp; Streamlit | Projet Berlue © 2026
     </div>
 </div>
 """,
