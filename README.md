@@ -111,9 +111,6 @@ se vérifie sur
 un déploiement qui atteint l'étape `Cloning repository...` dans ses logs prouve
 que l'accès est en place.
 
-Vérifier aussi le timeout du service Cloud Run : le client attend jusqu'à 600 s
-sur `/predict`, ce qui ne sert à rien si GCP coupe la requête avant.
-
 `requirements.txt` ne doit jamais contenir `aletheia` : un paquet homonyme sans
 rapport existe sur PyPI, et `pip freeze` après un `pip install -e .` l'y réinjecte.
 
