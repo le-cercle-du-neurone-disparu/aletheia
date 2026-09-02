@@ -30,10 +30,14 @@ ask() {
     printf -v "$var_name" '%s' "$value"
 }
 
-ask BERLUE_API_URL "http://localhost:8000" "BERLUE_API_URL (URL de l'API berlue)"
+GCP_DEFAULT="https://berlue-api-test-884258104866.europe-west1.run.app"
+
+ask BERLUE_API_URL "http://localhost:8000" "BERLUE_API_URL (backend de l'environnement local)"
+ask BERLUE_API_GCP_URL "$GCP_DEFAULT" "BERLUE_API_GCP_URL (backend Cloud Run, pour make run_app_gcp)"
 
 {
     echo "BERLUE_API_URL=$BERLUE_API_URL"
+    echo "BERLUE_API_GCP_URL=$BERLUE_API_GCP_URL"
 } > "$ENV_FILE"
 
 echo "✅ .env créé."

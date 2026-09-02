@@ -3,21 +3,27 @@ Client HTTP minimal vers l'API Berlue (voir `berlue/berlue/api/fast.py` dans
 le repo `berlue` pour le détail des routes/schémas).
 """
 
-import os
-
 import requests
 import streamlit as st
-from dotenv import load_dotenv
 
-load_dotenv()
+from utils.config import API_URL, ENV_NAME
 
-API_URL = os.getenv("BERLUE_API_URL", "http://localhost:8000")
+__all__ = [
+    "API_URL",
+    "ENV_NAME",
+    "check_hallucinations",
+    "get_available_llms",
+    "run_evaluation",
+]
 
 
 @st.cache_data(ttl=300)  # Met en cache pendant 5 minutes pour ne pas spammer l'API
 def get_available_llms() -> list[str]:
     """GET /llms — liste des modèles LLM disponibles."""
-    response = requests.get(f"{API_URL}/llms", timeout=10)
+    # 60 s et non 10 : la route interroge le serveur Ollama, dont l'instance
+    # Cloud Run peut être froide. Mesuré à 23 s sur un démarrage à froid — la
+    # borne de 10 s faisait passer un backend sain pour une panne de réseau.
+    response = requests.get(f"{API_URL}/llms", timeout=60)
     response.raise_for_status()
     return response.json()["available_llms"]
 

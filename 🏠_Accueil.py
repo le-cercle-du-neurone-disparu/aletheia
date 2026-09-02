@@ -3,12 +3,10 @@ Point d'entrée Streamlit — Aletheia (Page d'accueil).
 Présentation complète du projet Berlue.
 """
 
-import platform
-import socket
-import subprocess
-
 import requests
 import streamlit as st
+
+from utils.api_client import API_URL, ENV_NAME
 
 # ==============================================================================
 # CONFIGURATION
@@ -23,7 +21,9 @@ st.set_page_config(
 # ==============================================================================
 # CONSTANTES
 # ==============================================================================
-API_URL = "http://localhost:8000"
+# API_URL est importée et non redéfinie ici : c'est la seule qui lit
+# BERLUE_API_URL, et une constante locale sondait localhost alors que le
+# backend tourne sur Cloud Run.
 API_HEALTH_URL = f"{API_URL}/"
 
 # ==============================================================================
@@ -37,190 +37,10 @@ def check_api_health():
     Retourne True si l'API répond, False sinon.
     """
     try:
-        response = requests.get(API_HEALTH_URL, timeout=2)
+        response = requests.get(API_HEALTH_URL, timeout=10)
         return response.status_code == 200
     except (requests.ConnectionError, requests.Timeout):
         return False
-
-
-def is_port_in_use(port=8000):
-    """
-    Vérifie si le port est déjà utilisé.
-    """
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        try:
-            s.bind(("localhost", port))
-            return False
-        except OSError:
-            return True
-
-
-def open_terminal_and_run_command():
-    """
-    Ouvre un terminal et exécute les commandes pour lancer l'API.
-    """
-    # Chemin vers le projet
-    project_path = "/opt/wagon/src/berlue"
-
-    # Déterminer le système d'exploitation
-    system = platform.system()
-
-    # Commandes à exécuter
-    if system == "Windows":
-        # Windows - utilise cmd
-        cmd = ["start", "cmd", "/k", f"cd /d {project_path} && make run_api"]
-        # Alternative avec PowerShell
-        # cmd = ["powershell", "-Command", f"Start-Process cmd -ArgumentList '/k cd {project_path} && make run_api'"]
-
-    elif system == "Darwin":  # macOS
-        # macOS - utilise Terminal.app
-        cmd = [
-            "osascript",
-            "-e",
-            f'tell application "Terminal" to do script "cd {project_path} && make run_api"',
-        ]
-        # Alternative avec iTerm2 si disponible
-        # cmd = [
-        #     "osascript",
-        #     "-e",
-        #     f'tell application "iTerm" to create window with default profile command "cd {project_path} && make run_api"'
-        # ]
-
-    else:  # Linux
-        # Linux - essaie plusieurs terminaux
-        terminals = [
-            [
-                "gnome-terminal",
-                "--",
-                "bash",
-                "-c",
-                f"cd {project_path} && make run_api; exec bash",
-            ],
-            [
-                "konsole",
-                "-e",
-                "bash",
-                "-c",
-                f"cd {project_path} && make run_api; exec bash",
-            ],
-            [
-                "xterm",
-                "-e",
-                "bash",
-                "-c",
-                f"cd {project_path} && make run_api; exec bash",
-            ],
-            [
-                "xfce4-terminal",
-                "--command",
-                f"bash -c 'cd {project_path} && make run_api; exec bash'",
-            ],
-            [
-                "terminator",
-                "-x",
-                "bash",
-                "-c",
-                f"cd {project_path} && make run_api; exec bash",
-            ],
-        ]
-
-        for terminal_cmd in terminals:
-            try:
-                subprocess.Popen(
-                    terminal_cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
-                )
-                return True, f"Terminal ouvert avec {terminal_cmd[0]}"
-            except FileNotFoundError:
-                continue
-
-        return False, "Aucun terminal trouvé sur ce système Linux"
-
-    try:
-        # Exécuter la commande pour ouvrir le terminal
-        if system == "Windows" or system == "Darwin":
-            subprocess.Popen(cmd, shell=True)
-        else:
-            subprocess.Popen(cmd)
-
-        return (
-            True,
-            f"Terminal ouvert. Lancement de l'API dans le dossier {project_path}",
-        )
-
-    except OSError as e:
-        return False, f"Erreur lors de l'ouverture du terminal : {e!s}"
-
-
-def open_terminal_with_detailed_commands():
-    """
-    Ouvre un terminal et exécute les commandes étape par étape.
-    """
-    system = platform.system()
-    project_path = "/opt/wagon/src/berlue"
-
-    if system == "Windows":
-        # Windows
-        cmd = [
-            "start",
-            "cmd",
-            "/k",
-            f"cd /d {project_path} && echo Lancement de l'API Berlue... && make run_api",
-        ]
-        return subprocess.Popen(cmd, shell=True)
-
-    elif system == "Darwin":  # macOS
-        # macOS avec Terminal.app
-        cmd = [
-            "osascript",
-            "-e",
-            f'tell application "Terminal" to do script "cd {project_path} && echo \\"🚀 Lancement de l\\\'API Berlue...\\" && echo \\"📂 Répertoire : $(pwd)\\" && make run_api"',
-        ]
-        return subprocess.Popen(cmd, shell=True)
-
-    else:  # Linux
-        # Linux
-        cmd = [
-            "gnome-terminal",
-            "--",
-            "bash",
-            "-c",
-            f"cd {project_path} && echo '🚀 Lancement de l\\'API Berlue...' && echo '📂 Répertoire : $(pwd)' && make run_api; exec bash",
-        ]
-
-        # Essayer différents terminaux
-        terminals = [
-            [
-                "gnome-terminal",
-                "--",
-                "bash",
-                "-c",
-                f"cd {project_path} && echo '🚀 Lancement de l\\'API...' && make run_api; exec bash",
-            ],
-            [
-                "konsole",
-                "-e",
-                "bash",
-                "-c",
-                f"cd {project_path} && echo '🚀 Lancement de l\\'API...' && make run_api; exec bash",
-            ],
-            [
-                "xterm",
-                "-e",
-                "bash",
-                "-c",
-                f"cd {project_path} && echo '🚀 Lancement de l\\'API...' && make run_api; exec bash",
-            ],
-        ]
-
-        for terminal_cmd in terminals:
-            try:
-                return subprocess.Popen(
-                    terminal_cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
-                )
-            except FileNotFoundError:
-                continue
-
-        return None
 
 
 # ==============================================================================
@@ -806,21 +626,15 @@ api_online = check_api_health()
 if api_online:
     status_icon = "🟢"
     status_title = "API Berlue connectée"
-    status_desc = (
-        "L'API est opérationnelle. Vous pouvez utiliser toutes les fonctionnalités."
-    )
+    status_desc = f"L'API répond sur {API_URL} (environnement {ENV_NAME})."
     status_class = "status-success"
     status_dot = "online"
-elif is_port_in_use(8000):
-    status_icon = "🟡"
-    status_title = "Port 8000 occupé"
-    status_desc = "Le port 8000 est utilisé mais l'API ne répond pas. Vérifiez si un autre processus l'utilise."
-    status_class = "status-warning"
-    status_dot = "warning"
 else:
     status_icon = "🔴"
-    status_title = "API Berlue non détectée"
-    status_desc = "L'API n'est pas en cours d'exécution. Lancez-la pour utiliser les fonctionnalités."
+    status_title = "API Berlue injoignable"
+    # L'URL sondée est affichée : sans elle, une API distante saine et une
+    # API locale éteinte donnent exactement le même voyant rouge.
+    status_desc = f"Aucune réponse de {API_URL} (environnement {ENV_NAME})."
     status_class = "status-error"
     status_dot = "offline"
 
@@ -843,40 +657,12 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-if api_online:
-    # API en ligne - bouton pour vérifier/rafraîchir
-    st.markdown(
-        """
-        <button class="btn-refresh" onclick="location.reload()">🔄 Rafraîchir</button>
-    """,
-        unsafe_allow_html=True,
-    )
-else:
-    # API hors ligne - bouton pour lancer
-    if st.button(
-        "🚀 Lancer l'API Berlue", key="launch_api_btn", use_container_width=False
-    ):
-        # Ouvrir le terminal avec les commandes
-        success, message = open_terminal_and_run_command()
-
-        if success:
-            st.success(f"✅ {message}")
-            st.info(
-                "⏳ Attendez quelques secondes que l'API démarre, puis cliquez sur 'Rafraîchir'"
-            )
-        else:
-            st.error(f"❌ {message}")
-            st.info(
-                "💡 Vous pouvez aussi lancer manuellement l'API avec :\n```bash\ncd /opt/wagon/src/berlue && make run_api\n```"
-            )
-
-    # Bouton de rafraîchissement
-    st.markdown(
-        """
-        <button class="btn-refresh" onclick="location.reload()">🔄 Rafraîchir</button>
-    """,
-        unsafe_allow_html=True,
-    )
+st.markdown(
+    """
+    <button class="btn-refresh" onclick="location.reload()">🔄 Rafraîchir</button>
+""",
+    unsafe_allow_html=True,
+)
 
 st.markdown(
     """
@@ -997,7 +783,7 @@ st.markdown(
             <li>Identifiez les hallucinations avec code couleur</li>
             <li>Vérifiez les sources utilisées pour chaque affirmation</li>
         </ul>
-        <a href="/1_🔎_Prediction" target="_self" class="btn-primary {"btn-disabled" if feature_disabled else ""}" {'style="pointer-events: none; opacity: 0.5;"' if feature_disabled else ""}>
+        <a href="/Prediction" target="_self" class="btn-primary {"btn-disabled" if feature_disabled else ""}" {'style="pointer-events: none; opacity: 0.5;"' if feature_disabled else ""}>
             {"🔒 " if feature_disabled else "🔍 "}Accéder à l'Explorateur
         </a>
     </div>
@@ -1011,7 +797,7 @@ st.markdown(
             <li>Visualisez les matrices de confusion (2×3)</li>
             <li>Analysez les performances globales</li>
         </ul>
-        <a href="/2_📊_Evaluation" target="_self" class="btn-primary {"btn-disabled" if feature_disabled else ""}" {'style="pointer-events: none; opacity: 0.5;"' if feature_disabled else ""}>
+        <a href="/Evaluation" target="_self" class="btn-primary {"btn-disabled" if feature_disabled else ""}" {'style="pointer-events: none; opacity: 0.5;"' if feature_disabled else ""}>
             {"🔒 " if feature_disabled else "📈 "}Accéder au Benchmark
         </a>
     </div>
