@@ -109,14 +109,7 @@ SCHEMA_HAUTEUR = 620
 # ==============================================================================
 # INTERFACE
 # ==============================================================================
-st.title("🏗️ Présentation technique")
-st.markdown(
-    "Les composants de la démo et la façon dont ils s'enchaînent, "
-    "d'une question posée jusqu'au verdict rendu."
-)
-st.divider()
-
-st.subheader("Composants de la démo — schéma d'architecture")
+st.subheader("Comment ça marche ?")
 
 components.html(SCHEMA, height=SCHEMA_HAUTEUR, scrolling=False)
 
