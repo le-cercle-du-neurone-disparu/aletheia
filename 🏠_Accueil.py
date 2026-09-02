@@ -27,10 +27,13 @@ st.markdown(
 <style>
     /* Marge haute par défaut de Streamlit : elle laisse un vide sous le menu,
        qui n'a plus lieu d'être depuis que la navigation occupe le header. */
-    .block-container { padding-top: 5rem; }
-
-    /* Le header étant hors flux, la colonne passerait dessous sans ce dégagement. */
-    section[data-testid="stSidebar"] > div { padding-top: 3.5rem; }
+    /* Les deux barres étant hors flux, le contenu passerait dessous sans ces
+       dégagements — en haut pour le menu, en bas pour le pied de page. */
+    .block-container { padding-top: 5rem; padding-bottom: 5rem; }
+    section[data-testid="stSidebar"] > div {
+        padding-top: 3.5rem;
+        padding-bottom: 4.5rem;
+    }
 
     /* Le conteneur est une rangée flex dont la barre latérale est le premier
        élément : le header, placé après, se retrouvait décalé de sa largeur.
@@ -86,27 +89,31 @@ st.navigation(PAGES, position="top").run()
 st.markdown(
     """
 <style>
-    /* Même bandeau que le menu : fond et bordure repris du header pour que les
-       deux barres se répondent. Il occupe sa colonne et non 100vw — décalé par
-       la barre latérale, un bloc pleine fenêtre déborderait sur la droite. */
+    /* Barre fixée en bas, pendant du menu : même fond, même bordure, toute la
+       largeur de la fenêtre. `fixed` la sort du flux, donc sa place dans le
+       document n'a pas d'importance et la colonne ne la décale pas. */
     .pied-de-page {
-        margin: 3rem 0 0 0;
-        width: 100%;
-        padding: 0.9rem 1rem;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        width: 100vw;
+        padding: 0.5rem 1rem;
         background: #f0f2f6;
         border-top: 1px solid #d6d9e0;
         text-align: center;
         color: #1a1a2e;
+        z-index: 999998;
     }
     .pied-de-page .avertissement {
-        font-size: 0.85rem;
+        font-size: 0.82rem;
         font-style: italic;
         opacity: 0.85;
     }
     .pied-de-page .mentions {
-        font-size: 0.8rem;
+        font-size: 0.76rem;
         opacity: 0.6;
-        margin-top: 0.25rem;
+        margin-top: 0.15rem;
     }
 </style>
 <div class="pied-de-page">
