@@ -48,7 +48,12 @@ team_members = load_team_data("team.json")
 
 if team_members:
     # Une colonne par membre : tout le monde tient dans la page, sans défilement.
-    for col, member in zip(st.columns(len(team_members)), team_members, strict=True):
+    # Trié ici et non dans team.json : l'ordre reste alphabétique quel que soit
+    # l'ordre d'ajout des membres au fichier. Casse ignorée, sans quoi les
+    # pseudonymes en majuscules passeraient tous devant.
+    membres = sorted(team_members, key=lambda m: m.get("name", "").casefold())
+
+    for col, member in zip(st.columns(len(membres)), membres, strict=True):
         with col, st.container(border=True):
             st.markdown('<div class="fiche-equipe">', unsafe_allow_html=True)
 
