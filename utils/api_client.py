@@ -29,7 +29,11 @@ def check_hallucinations(question: str, llm_name: str, temperature: float):
         "llm": {"name": llm_name, "temperature": temperature},
     }
     try:
-        response = requests.post(f"{API_URL}/predict", json=payload, timeout=60)
+        # 600 s et non 60 : le pipeline enchaîne génération, extraction, K
+        # échantillons, l'inférence NLI et un appel RAG par affirmation. Mesuré à
+        # 6 min 23 sur Cloud Run avec phi3:14b à l'extraction et au RAG — la borne
+        # d'une minute coupait une requête qui aboutissait pourtant côté serveur.
+        response = requests.post(f"{API_URL}/predict", json=payload, timeout=600)
         response.raise_for_status()
         return response.json()
     except requests.exceptions.RequestException as e:
