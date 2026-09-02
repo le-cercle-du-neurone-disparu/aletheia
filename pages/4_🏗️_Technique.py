@@ -63,7 +63,7 @@ SCHEMA = """
           <!-- LLM -->
           <rect x="280" y="176" width="170" height="54" rx="0" fill="none" stroke="currentColor"/>
           <text x="365" y="200" font-size="12.5" text-anchor="middle" font-weight="700">LLM</text>
-          <text x="365" y="217" font-size="10" text-anchor="middle" fill="#009DA8">ollama ou transformers</text>
+          <text x="365" y="217" font-size="12" text-anchor="middle" fill="#009DA8">ollama ou transformers</text>
 
           <!-- Extracteur d'affirmations -->
           <rect x="510" y="176" width="210" height="54" rx="0" fill="none" stroke="currentColor"/>
@@ -73,13 +73,13 @@ SCHEMA = """
           <!-- SelfCheckGPT -->
           <rect x="280" y="276" width="190" height="54" rx="0" fill="none" stroke="currentColor"/>
           <text x="375" y="300" font-size="12.5" text-anchor="middle" font-weight="700">SelfCheckGPT</text>
-          <text x="375" y="317" font-size="10" text-anchor="middle" fill="#009DA8">module selfcheckgpt</text>
+          <text x="375" y="317" font-size="12" text-anchor="middle" fill="#009DA8">module selfcheckgpt</text>
 
           <!-- RAG -->
           <rect x="740" y="176" width="140" height="180" rx="0" fill="none" stroke="currentColor"/>
           <text x="810" y="200" font-size="12.5" text-anchor="middle" font-weight="700">RAG</text>
           <text x="810" y="217" font-size="12.5" text-anchor="middle" font-weight="700">Index vectoriel</text>
-          <text x="810" y="237" font-size="10" text-anchor="middle" fill="#009DA8">FAISS/Chroma lib</text>
+          <text x="810" y="237" font-size="12" text-anchor="middle" fill="#009DA8">FAISS/Chroma lib</text>
           <ellipse cx="810" cy="270" rx="42" ry="9" fill="none" stroke="#F86F32"/>
           <path d="M768,270 v50 a42,9 0 0 0 84,0 v-50" fill="none" stroke="#F86F32"/>
           <text x="810" y="300" font-size="11" text-anchor="middle" font-weight="700" fill="#F86F32">FEVER</text>
