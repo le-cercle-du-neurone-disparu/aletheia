@@ -185,7 +185,13 @@ def construire_verdict(claim: dict) -> str:
         classe, etiquette = "verdict-incertain", "Incertain"
 
     score = claim.get("fusion_score")
-    score_affiche = f"[{score:.2f}]" if isinstance(score, int | float) else "[—]"
+    # Libellé explicite plutôt qu'un nombre nu entre crochets : rien n'y disait
+    # qu'il s'agissait d'une confiance, ni sur quelle échelle.
+    score_affiche = (
+        f"confiance&nbsp;: {score * 100:.0f}&nbsp;%"
+        if isinstance(score, int | float)
+        else "confiance&nbsp;: —"
+    )
 
     texte = html.escape(str(claim.get("claim_text", "N/A")))
     source = html.escape(str(claim.get("evidence_source", "N/A")))
