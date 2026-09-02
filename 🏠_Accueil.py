@@ -110,19 +110,17 @@ st.markdown(
         font-style: italic;
         opacity: 0.85;
     }
+    .pied-de-page .separateur {
+        opacity: 0.4;
+        margin: 0 0.5rem;
+    }
     .pied-de-page .mentions {
         font-size: 0.76rem;
         opacity: 0.6;
-        margin-top: 0.15rem;
     }
 </style>
 <div class="pied-de-page">
-    <div class="avertissement">
-        ⚠️ Les résultats sont indicatifs et ne remplacent pas une vérification humaine.
-    </div>
-    <div class="mentions">
-        🚀 Propulsé par FastAPI &amp; Streamlit | Projet Berlue © 2026
-    </div>
+    <span class="avertissement">⚠️ Les résultats sont indicatifs et ne remplacent pas une vérification humaine.</span><span class="separateur">-</span><span class="mentions">🚀 Propulsé par FastAPI &amp; Streamlit | Projet Berlue © 2026</span>
 </div>
 """,
     unsafe_allow_html=True,

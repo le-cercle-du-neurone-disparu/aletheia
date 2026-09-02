@@ -308,14 +308,46 @@ def render_scope(scope: dict, baseline_matrix: dict | None, key_prefix: str) -> 
 
 st.markdown(
     """
-<div style="margin-bottom: 2rem;">
-    <h1 style="font-size: 2.2rem; font-weight: 700; color: #fff; letter-spacing: -0.02em;">
-        📊 Tableau de Bord d'Évaluation
-    </h1>
-    <p style="color: #a0aec0; font-size: 1.05rem; margin-top: 0.3rem;">
-        Recherchez un résultat d'évaluation déjà calculé pour comparer
-        <strong>Baseline</strong> (modèle brut) et <strong>Berlue</strong> (modèle + fact-checking)
-    </p>
+<style>
+    .entete-analyse {
+        display: flex;
+        align-items: center;
+        gap: 1.4rem;
+        margin-bottom: 2rem;
+    }
+    .entete-analyse .figure {
+        flex: 0 0 auto;
+        height: 130px;
+        width: auto;
+    }
+    /* Sous cette largeur la figure écraserait le titre : le texte prime. */
+    @media (max-width: 640px) {
+        .entete-analyse .figure { display: none; }
+    }
+    .entete-analyse h1 {
+        /* `inherit` et non une couleur fixe : le titre était en blanc, donc
+           invisible sur le thème clair de Streamlit. */
+        color: inherit;
+        font-size: 2.2rem;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        margin: 0;
+    }
+    .entete-analyse p {
+        color: #a0aec0;
+        font-size: 1.05rem;
+        margin: 0.3rem 0 0;
+    }
+</style>
+<div class="entete-analyse">
+    <img class="figure" src="/app/static/aletheia-parle.webp" alt="Aletheia">
+    <div>
+        <h1>Tableau de Bord d'Évaluation</h1>
+        <p>
+            Recherchez un résultat d'évaluation déjà calculé pour comparer
+            <strong>Baseline</strong> (modèle brut) et <strong>Berlue</strong> (modèle + fact-checking)
+        </p>
+    </div>
 </div>
 """,
     unsafe_allow_html=True,
