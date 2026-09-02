@@ -15,7 +15,9 @@ __all__ = [
     "ENV_NAME",
     "check_hallucinations",
     "get_available_llms",
-    "run_evaluation",
+    "get_baseline_evaluation",
+    "get_baseline_evaluation_generated",
+    "list_evaluated_models",
 ]
 
 # Un modèle sans taille lisible dans son tag est trié en dernier : le premier
@@ -80,7 +82,9 @@ def check_hallucinations(question: str, llm_name: str, temperature: float):
         return None
 
 
-@st.cache_data(ttl=60)  # Met en cache brièvement — assez court pour voir arriver un nouveau run
+@st.cache_data(
+    ttl=60
+)  # Met en cache brièvement — assez court pour voir arriver un nouveau run
 def list_evaluated_models(mode: str = "dataset", **filters) -> list[dict] | None:
     """GET /evaluated-models — scopes déjà évalués et stockés (mode
     'dataset' ou 'generated'), filtrable par model_id/ratio/pipeline_version/
@@ -90,7 +94,9 @@ def list_evaluated_models(mode: str = "dataset", **filters) -> list[dict] | None
     — ne déclenche jamais de calcul."""
     params = {"mode": mode, **{k: v for k, v in filters.items() if v is not None}}
     try:
-        response = requests.get(f"{API_URL}/evaluated-models", params=params, timeout=15)
+        response = requests.get(
+            f"{API_URL}/evaluated-models", params=params, timeout=15
+        )
         response.raise_for_status()
         return response.json()["evaluations"]
     except requests.exceptions.RequestException as e:
@@ -103,7 +109,9 @@ def get_baseline_evaluation(dataset: str, ratio: float) -> dict | None:
     volée à chaque appel (jamais stockée), indépendante du modèle évalué."""
     try:
         response = requests.get(
-            f"{API_URL}/baseline-evaluation", params={"dataset": dataset, "ratio": ratio}, timeout=15
+            f"{API_URL}/baseline-evaluation",
+            params={"dataset": dataset, "ratio": ratio},
+            timeout=15,
         )
         response.raise_for_status()
         return response.json()
@@ -113,7 +121,11 @@ def get_baseline_evaluation(dataset: str, ratio: float) -> dict | None:
 
 
 def get_baseline_evaluation_generated(
-    dataset: str, ratio: float, model_id: str, generation_version: str, eval_version: str
+    dataset: str,
+    ratio: float,
+    model_id: str,
+    generation_version: str,
+    eval_version: str,
 ) -> dict | None:
     """GET /baseline-evaluation-generated — baseline mode généré, lecture
     cache seule. Retourne `None` sans afficher d'erreur si ce scope précis
