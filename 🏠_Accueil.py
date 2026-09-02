@@ -29,7 +29,16 @@ st.markdown(
        qui n'a plus lieu d'être depuis que la navigation occupe le header. */
     .block-container { padding-top: 2.5rem; }
 
+    /* Le conteneur est une rangée flex dont la barre latérale est le premier
+       élément : le header, placé après, se retrouvait décalé de sa largeur.
+       En le renvoyant en tête sur une ligne pleine, la colonne repart dessous. */
+    [data-testid="stAppViewContainer"] {
+        flex-wrap: wrap;
+        align-content: flex-start;
+    }
     header[data-testid="stHeader"] {
+        order: -1;
+        width: 100% !important;
         background: #f0f2f6 !important;
         backdrop-filter: none !important;
         border-bottom: 1px solid #d6d9e0 !important;
