@@ -159,6 +159,18 @@ st.markdown(
     .verdict-incertain { background: #f2e3a3; }
 
 
+    /* Berlue en icone du bouton d'action, a la place de l'emoji fusee. La cle du
+       widget donne la classe `st-key-btn_generer`, seul moyen de viser ce bouton
+       precis sans toucher aux autres boutons primaires de la page. */
+    .st-key-btn_generer button::before {
+        content: "";
+        flex: 0 0 auto;
+        width: 1.9em;
+        height: 1.9em;
+        margin-right: 0.5em;
+        background: url("/app/static/berlue-tete.webp") center / contain no-repeat;
+    }
+
     .ligne-analyse {
         /* `inherit` et non --text-primary, qui vaut blanc : ce bloc de style a
            été écrit pour un fond sombre, alors que l'app suit le thème clair de
@@ -457,10 +469,11 @@ with col_question:
     )
 with col_action:
     lancer = st.button(
-        "🚀 Générer & Vérifier",
+        "Générer & Vérifier",
         type="primary",
         use_container_width=True,
         disabled=not available_llms,
+        key="btn_generer",
     )
 
 if lancer:
