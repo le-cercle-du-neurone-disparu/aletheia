@@ -32,45 +32,43 @@ def load_team_data(filepath: str = "team.json") -> list[dict]:
 # ==============================================================================
 # INTERFACE UTILISATEUR
 # ==============================================================================
-st.title("👥 L'Équipe derrière Berlue")
 st.markdown(
-    "Découvrez les esprits passionnés qui ont construit le moteur de fact-checking **Berlue** et l'interface **Aletheia**."
+    """
+<style>
+    /* Les quatre membres tiennent sur une seule ligne : le texte est resserré
+       pour que chaque fiche reste lisible dans un quart de largeur. */
+    .block-container { padding-top: 2.5rem; }
+    .fiche-equipe p, .fiche-equipe li { font-size: 0.82rem; line-height: 1.45; }
+    .fiche-equipe h3 { font-size: 1.05rem; margin-bottom: 0.1rem; }
+</style>
+""",
+    unsafe_allow_html=True,
 )
-st.divider()
+
+st.subheader("Berlue")
 
 # Chargement des données
 team_members = load_team_data("team.json")
 
 if team_members:
-    # Affichage dynamique sous forme de grille (2 personnes par ligne)
-    # range(0, len, 2) permet de faire des pas de 2
-    for i in range(0, len(team_members), 2):
-        cols = st.columns(2)  # Crée 2 colonnes pour la ligne actuelle
+    # Une colonne par membre : tout le monde tient dans la page, sans défilement.
+    for col, member in zip(st.columns(len(team_members)), team_members, strict=True):
+        with col, st.container(border=True):
+            st.markdown('<div class="fiche-equipe">', unsafe_allow_html=True)
 
-        for j in range(2):
-            # Vérifie si on ne dépasse pas la taille de la liste (ex: nombre impair de membres)
-            if i + j < len(team_members):
-                member = team_members[i + j]
+            if member.get("photo_url"):
+                st.image(member["photo_url"], width="stretch")
 
-                with cols[j], st.container(border=True):
-                    img_col, text_col = st.columns([1, 2])
+            st.markdown(f"### {member.get('name', 'Anonyme')}")
+            if member.get("role"):
+                st.caption(f"💼 {member['role']}")
 
-                    with img_col:
-                        # Affiche l'image (marche avec des URL ou des chemins locaux)
-                        if member.get("photo_url"):
-                            st.image(member["photo_url"], use_container_width=True)
+            st.write(member.get("description", ""))
 
-                    with text_col:
-                        st.subheader(member.get("name", "Anonyme"))
-                        # Affiche le rôle en gris (caption) s'il existe
-                        if member.get("role"):
-                            st.caption(f"💼 {member['role']}")
+            github_link = member.get("github_url", "").strip()
+            if github_link:
+                st.link_button("🐙 GitHub", url=github_link)
 
-                        st.write(member.get("description", ""))
-
-                        # Affiche le bouton GitHub uniquement si l'URL est remplie
-                        github_link = member.get("github_url", "").strip()
-                        if github_link:
-                            st.link_button("🐙 Voir le GitHub", url=github_link)
+            st.markdown("</div>", unsafe_allow_html=True)
 else:
     st.info("Les membres de l'équipe n'ont pas encore été configurés.")
