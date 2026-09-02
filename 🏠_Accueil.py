@@ -25,6 +25,10 @@ st.set_page_config(
 st.markdown(
     """
 <style>
+    /* Marge haute par défaut de Streamlit : elle laisse un vide sous le menu,
+       qui n'a plus lieu d'être depuis que la navigation occupe le header. */
+    .block-container { padding-top: 2.5rem; }
+
     header[data-testid="stHeader"] {
         background: #f0f2f6 !important;
         backdrop-filter: none !important;

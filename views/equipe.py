@@ -34,9 +34,6 @@ def load_team_data(filepath: str = "team.json") -> list[dict]:
 st.markdown(
     """
 <style>
-    /* Les quatre membres tiennent sur une seule ligne : le texte est resserré
-       pour que chaque fiche reste lisible dans un quart de largeur. */
-    .block-container { padding-top: 2.5rem; }
     .fiche-equipe p, .fiche-equipe li { font-size: 0.82rem; line-height: 1.45; }
     .fiche-equipe h3 { font-size: 1.05rem; margin-bottom: 0.1rem; }
 </style>
