@@ -30,10 +30,10 @@ ask() {
     printf -v "$var_name" '%s' "$value"
 }
 
-GCP_DEFAULT="https://berlue-api-test-884258104866.europe-west1.run.app"
-
 ask BERLUE_API_URL "http://localhost:8000" "BERLUE_API_URL (backend de l'environnement local)"
-ask BERLUE_API_GCP_URL "$GCP_DEFAULT" "BERLUE_API_GCP_URL (backend Cloud Run, pour make run_app_gcp)"
+# Pas de valeur par défaut : l'URL dépend du projet GCP et de l'environnement
+# déployé. `make cloudrun_url` dans le dépôt berlue la donne.
+ask BERLUE_API_GCP_URL "" "BERLUE_API_GCP_URL (backend Cloud Run, vide si inutile — cf. make cloudrun_url dans berlue)"
 
 {
     echo "BERLUE_API_URL=$BERLUE_API_URL"
