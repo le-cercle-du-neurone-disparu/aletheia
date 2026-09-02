@@ -6,7 +6,12 @@ Avec présentation du processus Berlue.
 import requests
 import streamlit as st
 
-from utils.api_client import API_URL, check_hallucinations, get_available_llms
+from utils.api_client import (
+    API_URL,
+    ENV_NAME,
+    check_hallucinations,
+    get_available_llms,
+)
 
 # ==============================================================================
 # CONFIGURATION
@@ -136,14 +141,16 @@ with st.sidebar:
         if available_llms:
             st.success("✅ Backend opérationnel")
         else:
-            st.warning("⚠️ Aucun modèle disponible")
-    except requests.exceptions.RequestException:
-        st.error("❌ Erreur de connexion")
-        available_llms = ["llama-2-7b", "mistral-7b"]
+            st.warning("⚠️ Aucun modèle chargé côté serveur")
+    except requests.exceptions.RequestException as e:
+        st.error(f"❌ Erreur de connexion : {e}")
+        available_llms = []
 
     st.divider()
 
     # Sélecteurs
+    # Aucune liste de repli : un modèle absent du serveur Ollama ne produit
+    # qu'un 500 opaque sur /predict, alors qu'un sélecteur vide montre la panne.
     selected_llm = st.selectbox("🤖 Modèle LLM", options=available_llms)
 
     selected_temp = st.slider(
@@ -181,7 +188,7 @@ with st.sidebar:
         unsafe_allow_html=True,
     )
 
-    st.caption(f"🔗 API: {API_URL}")
+    st.caption(f"🔗 API ({ENV_NAME}) : {API_URL}")
 
 # --- ZONE PRINCIPALE ---
 
@@ -209,7 +216,12 @@ question_input = st.text_area(
 )
 
 # Bouton
-if st.button("🚀 Générer & Vérifier", type="primary", use_container_width=True):
+if st.button(
+    "🚀 Générer & Vérifier",
+    type="primary",
+    use_container_width=True,
+    disabled=not available_llms,
+):
     if not question_input.strip():
         st.warning("⚠️ Veuillez entrer une question.")
     else:

@@ -308,8 +308,9 @@ with st.sidebar:
     st.markdown("#### 🤖 Modèle LLM")
     try:
         available_llms = get_available_llms()
-    except requests.exceptions.RequestException:
-        available_llms = ["llama-2-7b", "mistral-7b", "llama3.1:8b"]
+    except requests.exceptions.RequestException as e:
+        st.error(f"❌ Erreur de connexion : {e}")
+        available_llms = []
 
     selected_llm = st.selectbox(
         "Modèle", options=available_llms, label_visibility="collapsed"
