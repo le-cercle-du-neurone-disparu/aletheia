@@ -162,6 +162,18 @@ with st.sidebar:
         help="0 = factuel · 1 = créatif",
     )
 
+    ignore_cache = st.toggle(
+        "🔄 Ignorer le cache",
+        value=False,
+        help=(
+            "Recalcule la réponse même si la question est déjà en cache, et "
+            "remplace l'entrée existante. À utiliser après un changement de "
+            "prompt ou de seuils, que la clé de cache ne voit pas."
+        ),
+    )
+    if ignore_cache:
+        st.warning("⏱️ Recalcul complet — plusieurs minutes.")
+
     # Indicateur
     if selected_temp < 0.3:
         st.info("🔵 Mode factuel — réponses stables")
@@ -228,7 +240,10 @@ if st.button(
         with st.spinner(f"🔄 {selected_llm} en cours d'analyse..."):
             try:
                 result = check_hallucinations(
-                    question_input, selected_llm, selected_temp
+                    question_input,
+                    selected_llm,
+                    selected_temp,
+                    ignore_cache=ignore_cache,
                 )
 
                 if result:
@@ -236,9 +251,22 @@ if st.button(
                     st.balloons()
 
                     # Métadonnées
+                    # L'origine est affichée : sans elle, rien ne distingue un
+                    # recalcul d'une réponse resservie, et la bascule ci-contre
+                    # serait invérifiable. Absente des backends qui ne la
+                    # renvoient pas encore, d'où le repli silencieux.
+                    origine = result.get("origin") or {}
+                    provenance = ""
+                    if "cached" in origine:
+                        provenance = (
+                            " · 💾 servi depuis le cache"
+                            if origine["cached"]
+                            else " · ⚙️ recalculé"
+                        )
                     st.caption(
                         f"📊 {result.get('llm_used', {}).get('name', 'N/A')} · "
                         f"🌡️ {result.get('llm_used', {}).get('temperature', 'N/A')}"
+                        f"{provenance}"
                     )
 
                     col1, col2 = st.columns([1, 1.5])
