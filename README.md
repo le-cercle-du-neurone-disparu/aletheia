@@ -15,55 +15,30 @@ Le backend `berlue` doit tourner à part — voir la section suivante.
 ## Mettre en route le backend
 
 Aletheia n'embarque aucun modèle : toutes ses pages appellent l'API du projet
-[Berlue](../berlue). Sans backend joignable, l'app démarre mais le voyant de la
-page d'accueil reste rouge.
+[Berlue](https://github.com/le-cercle-du-neurone-disparu/berlue). Sans backend
+joignable, l'app démarre mais le voyant de la page d'accueil reste rouge.
 
-### Backend local
+La procédure — local natif, Docker local, puis Cloud Run — vit dans le dépôt
+`berlue` et n'est pas reproduite ici :
+**[Mise en service & API](https://github.com/le-cercle-du-neurone-disparu/berlue#mise-en-service--api)**.
 
-Dans le dépôt `berlue`, au choix :
+Ce qu'Aletheia en attend :
 
-```bash
-make run_api_local      # FastAPI directement, rechargement à chaud
-make docker_run_local   # le même service en conteneur, port 8000
-```
-
-Berlue s'appuie sur un serveur Ollama pour l'inférence ; `make ollama_setup`
-puis `make ollama_check` l'installent et vérifient qu'il tourne. Le README de
-`berlue` fait foi sur les prérequis.
-
-L'API écoute alors sur `http://localhost:8000`, qui est la valeur par défaut
-d'Aletheia : rien à configurer côté front.
-
-### Backend sur Cloud Run
-
-Toujours dans `berlue` :
-
-```bash
-make gcp_setup     # provisionne l'infra (rejouable, ne déploie aucun service)
-make gcp_deploy    # build, push et déploie les services (CLOUDRUN_ENV=test par défaut)
-make cloudrun_url  # affiche l'URL du service déployé
-```
-
-`make cloudrun_url` est la commande qui donne la valeur à mettre dans
-`BERLUE_API_URL` — c'est pourquoi aucune URL n'est écrite en dur dans ce dépôt :
-elle dépend du projet GCP et de l'environnement (`test`, `staging`, `prod`).
-
-Le service doit accepter les appels non authentifiés
-(`--allow-unauthenticated`), sinon Streamlit reçoit un 403.
-
-Vérifier qu'il répond avant de brancher le front :
-
-```bash
-curl "$(cd ../berlue && make -s cloudrun_url | tail -1)/llms"
-```
-
-### Brancher le front dessus
-
-| Cible | Où mettre l'URL |
+| Backend visé | URL à utiliser |
 | --- | --- |
-| app locale → backend local | rien à faire, c'est le défaut |
-| app locale → backend Cloud Run | `BERLUE_API_GCP_URL` dans `.env`, puis `make run_app_gcp` |
-| app Streamlit Cloud → backend Cloud Run | secrets de l'app, cf. `.streamlit/secrets.toml.example` |
+| local | `http://localhost:8000`, le défaut — rien à configurer |
+| Cloud Run | la sortie de `make cloudrun_url` dans `berlue` |
+
+Aucune URL Cloud Run n'est versionnée dans ce dépôt : elle dépend du projet GCP
+et de `CLOUDRUN_ENV` (`test`, `staging`, `prod`).
+
+Où la poser, selon la combinaison visée :
+
+| Front | Backend | Où mettre l'URL |
+| --- | --- | --- |
+| local | local | rien à faire |
+| local | Cloud Run | `BERLUE_API_GCP_URL` dans `.env`, puis `make run_app_gcp` |
+| Streamlit Cloud | Cloud Run | secrets de l'app, cf. `.streamlit/secrets.toml.example` |
 
 ## Environnements
 
