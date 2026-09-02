@@ -129,6 +129,18 @@ def afficher_debug(result: dict) -> None:
     pouvoir distinguer d'une panne.
     """
     detail = result.get("debug")
+
+    # Deux formes coexistent selon la version du backend : une trace texte, dont
+    # les lignes sont séparées par des sauts, et une structure détaillée. La
+    # première est ce que sert l'API aujourd'hui.
+    if isinstance(detail, str):
+        if detail.strip():
+            st.code(detail, language="text")
+            return
+        # Une trace vide vaut une absence de détail : elle rejoint le message
+        # qui en explique la cause plutôt qu'un bloc muet.
+        detail = None
+
     if not detail:
         if (result.get("origin") or {}).get("cached"):
             st.info(
