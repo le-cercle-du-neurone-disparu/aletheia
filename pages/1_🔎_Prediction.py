@@ -160,7 +160,10 @@ st.markdown(
     .verdict-incertain { background: #f2e3a3; }
 
     .ligne-analyse {
-        color: var(--text-primary);
+        /* `inherit` et non --text-primary, qui vaut blanc : ce bloc de style a
+           été écrit pour un fond sombre, alors que l'app suit le thème clair de
+           Streamlit. Hériter suit le thème quel qu'il soit. */
+        color: inherit;
         font-size: 0.95rem;
         margin: 0.2rem 0 0.9rem 0;
     }
