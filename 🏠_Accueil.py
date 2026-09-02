@@ -68,3 +68,36 @@ PAGES = [
 ]
 
 st.navigation(PAGES, position="top").run()
+
+# Rendu après la page : le pied de page suit son contenu, quelle qu'elle soit.
+st.markdown(
+    """
+<style>
+    .pied-de-page {
+        margin-top: 3rem;
+        padding: 1.5rem 0 1rem 0;
+        border-top: 1px solid rgba(128, 128, 128, 0.25);
+        text-align: center;
+    }
+    .pied-de-page .avertissement {
+        font-size: 0.85rem;
+        opacity: 0.75;
+        font-style: italic;
+    }
+    .pied-de-page .mentions {
+        font-size: 0.8rem;
+        opacity: 0.55;
+        margin-top: 0.4rem;
+    }
+</style>
+<div class="pied-de-page">
+    <div class="avertissement">
+        ⚠️ Les résultats sont indicatifs et ne remplacent pas une vérification humaine.
+    </div>
+    <div class="mentions">
+        🚀 Propulsé par FastAPI &amp; Streamlit | Projet Berlue © 2026
+    </div>
+</div>
+""",
+    unsafe_allow_html=True,
+)
