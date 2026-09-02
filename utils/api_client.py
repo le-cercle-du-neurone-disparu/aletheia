@@ -63,11 +63,18 @@ def get_available_llms() -> list[str]:
     return sorted(response.json()["available_llms"], key=lambda m: (_model_size(m), m))
 
 
-def check_hallucinations(question: str, llm_name: str, temperature: float):
-    """Envoie la question au backend pour prédiction et fact-checking."""
+def check_hallucinations(
+    question: str, llm_name: str, temperature: float, ignore_cache: bool = False
+):
+    """Envoie la question au backend pour prédiction et fact-checking.
+
+    `ignore_cache` force le recalcul côté serveur et remplace l'entrée en
+    cache. Un backend qui ne connaît pas encore le champ l'ignore sans erreur.
+    """
     payload = {
         "question": question,
         "llm": {"name": llm_name, "temperature": temperature},
+        "ignore_cache": ignore_cache,
     }
     try:
         # 600 s et non 60 : le pipeline enchaîne génération, extraction, K
