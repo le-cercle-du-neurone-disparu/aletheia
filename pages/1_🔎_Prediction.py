@@ -120,6 +120,92 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
+
+def afficher_debug(result: dict) -> None:
+    """Restitue le champ `debug` de la réponse, ou explique son absence.
+
+    Le serveur ne le joint qu'à un calcul réel : demander le détail sur une
+    question déjà en cache ne renvoie rien, et c'est le cas qu'un lecteur doit
+    pouvoir distinguer d'une panne.
+    """
+    detail = result.get("debug")
+    if not detail:
+        if (result.get("origin") or {}).get("cached"):
+            st.info(
+                "Réponse servie depuis le cache : le serveur en retire le "
+                "détail, qui décrirait une exécution antérieure. Relance avec "
+                "« Ignorer le cache » pour l'obtenir."
+            )
+        else:
+            st.warning(
+                "Le backend n'a pas renvoyé de détail. Il ne connaît "
+                "probablement pas encore le champ `debug`."
+            )
+        return
+
+    if detail.get("panne"):
+        st.error(f"⛔ Étage en panne : {detail['panne']}")
+
+    modeles = detail.get("models") or {}
+    if modeles:
+        st.markdown("**Modèles**")
+        st.dataframe(
+            [{"étage": role, "modèle": nom} for role, nom in modeles.items()],
+            hide_index=True,
+            use_container_width=True,
+        )
+
+    for index, claim in enumerate(detail.get("claims") or [], 1):
+        st.markdown(f"**Affirmation #{index}** — {claim.get('claim_text', 'N/A')}")
+
+        evidences = claim.get("evidences") or []
+        if evidences:
+            st.caption("Extraits FEVER remontés, par distance croissante")
+            st.dataframe(evidences, hide_index=True, use_container_width=True)
+        else:
+            st.caption("Aucun extrait remonté par le RAG.")
+
+        st.dataframe(
+            [
+                {"étage": "RAG — verdict", "valeur": claim.get("rag_verdict")},
+                {"étage": "RAG — confiance", "valeur": claim.get("rag_confidence")},
+                {
+                    "étage": "RAG — extrait retenu",
+                    "valeur": claim.get("rag_used_evidence_index"),
+                },
+                {
+                    "étage": "SelfCheck — divergence",
+                    "valeur": claim.get("selfcheck_divergence"),
+                },
+                {"étage": "Fusion — verdict", "valeur": claim.get("fusion_verdict")},
+                {
+                    "étage": "Fusion — confiance",
+                    "valeur": claim.get("fusion_confidence"),
+                },
+                {
+                    "étage": "Fusion — fondement",
+                    "valeur": claim.get("fusion_fondement"),
+                },
+            ],
+            hide_index=True,
+            use_container_width=True,
+        )
+
+        if claim.get("rag_reasoning"):
+            st.markdown(f"*Raisonnement RAG :* {claim['rag_reasoning']}")
+        if claim.get("fusion_explanation"):
+            st.markdown(f"*Explication de la fusion :* {claim['fusion_explanation']}")
+        if claim.get("rag_generation"):
+            st.caption(f"Génération RAG : {claim['rag_generation']}")
+        st.divider()
+
+    echantillons = detail.get("samples") or []
+    if echantillons:
+        st.markdown(f"**Échantillons SelfCheck** ({len(echantillons)})")
+        for numero, echantillon in enumerate(echantillons, 1):
+            st.markdown(f"{numero}. {echantillon}")
+
+
 # ==============================================================================
 # INTERFACE
 # ==============================================================================
@@ -173,6 +259,22 @@ with st.sidebar:
     )
     if ignore_cache:
         st.warning("⏱️ Recalcul complet — plusieurs minutes.")
+
+    debug = st.toggle(
+        "🐞 Détail d'exécution",
+        value=False,
+        help=(
+            "Rapatrie ce qui n'existe sinon que dans les logs du serveur : "
+            "extraits FEVER remontés et leur distance, verdict et raisonnement "
+            "du modèle RAG, divergence SelfCheck, fusion."
+        ),
+    )
+    if debug and not ignore_cache:
+        st.info(
+            "ℹ️ Le détail ne décrit qu'un calcul réel : le serveur le retire "
+            "d'une réponse servie depuis le cache. Active « Ignorer le cache » "
+            "pour l'obtenir sur une question déjà connue."
+        )
 
     # Indicateur
     if selected_temp < 0.3:
@@ -244,6 +346,7 @@ if st.button(
                     selected_llm,
                     selected_temp,
                     ignore_cache=ignore_cache,
+                    debug=debug,
                 )
 
                 if result:
@@ -365,6 +468,11 @@ if st.button(
                                     st.markdown(
                                         f"**Score de confiance :** {claim.get('fusion_score', 0):.2f}"
                                     )
+
+                    if debug:
+                        st.divider()
+                        with st.expander("🔍 Voir le détail d'exécution"):
+                            afficher_debug(result)
                 else:
                     st.error("❌ L'analyse a échoué.")
 
