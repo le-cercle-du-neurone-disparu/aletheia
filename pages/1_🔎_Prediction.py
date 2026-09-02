@@ -316,11 +316,7 @@ def afficher_debug(result: dict) -> None:
 # ==============================================================================
 
 # --- EN-TÊTE ---
-st.title("🔎 Aletheia - Détecteur d'Hallucinations LLM")
-st.markdown(
-    "Posez une question, le modèle génère une réponse et **Aletheia vérifie la véracité** des affirmations."
-)
-st.divider()
+st.subheader("Posez votre question au LLM.")
 
 # --- SIDEBAR ---
 with st.sidebar:
@@ -411,36 +407,24 @@ with st.sidebar:
 
 # --- ZONE PRINCIPALE ---
 
-# Questions d'exemple
-st.subheader("💡 Exemples de questions")
-example_cols = st.columns(3)
-with example_cols[0]:
-    if st.button("🏛️ Capitale de la France", use_container_width=True):
-        st.session_state["question"] = "Quelle est la capitale de la France ?"
-with example_cols[1]:
-    if st.button("⚽ Coupe du Monde 2022", use_container_width=True):
-        st.session_state["question"] = "Qui a remporté la Coupe du Monde 2022 ?"
-with example_cols[2]:
-    if st.button("🔬 Relativité", use_container_width=True):
-        st.session_state["question"] = "Explique la théorie de la relativité d'Einstein"
+# Saisie et bouton côte à côte
+col_question, col_action = st.columns([5, 1], vertical_alignment="bottom")
+with col_question:
+    question_input = st.text_input(
+        "Votre question",
+        value=st.session_state.get("question", ""),
+        placeholder="Ex: Pourquoi le ciel est-il bleu ?",
+        label_visibility="collapsed",
+    )
+with col_action:
+    lancer = st.button(
+        "🚀 Générer & Vérifier",
+        type="primary",
+        use_container_width=True,
+        disabled=not available_llms,
+    )
 
-st.divider()
-
-# Input
-question_input = st.text_area(
-    "📝 Votre question :",
-    value=st.session_state.get("question", ""),
-    placeholder="Ex: Pourquoi le ciel est-il bleu ?",
-    height=80,
-)
-
-# Bouton
-if st.button(
-    "🚀 Générer & Vérifier",
-    type="primary",
-    use_container_width=True,
-    disabled=not available_llms,
-):
+if lancer:
     if not question_input.strip():
         st.warning("⚠️ Veuillez entrer une question.")
     else:
@@ -455,9 +439,6 @@ if st.button(
                 )
 
                 if result:
-                    st.success("✅ Analyse terminée")
-                    st.balloons()
-
                     # Métadonnées
                     # L'origine est affichée : sans elle, rien ne distingue un
                     # recalcul d'une réponse resservie, et la bascule ci-contre
@@ -520,7 +501,3 @@ if st.button(
 
             except Exception as e:  # noqa: BLE001 -- filet de sécurité UI, couvre aussi les erreurs de rendu
                 st.error(f"❌ Erreur: {e!s}")
-
-# Footer
-st.divider()
-st.caption("🔍 Analyse par Berlue · Résultats indicatifs")
