@@ -340,7 +340,7 @@ st.markdown(
     }
 </style>
 <div class="entete-analyse">
-    <img class="figure" src="/app/static/aletheia-parle.webp" alt="Aletheia">
+    <img class="figure" src="app/static/aletheia-parle.webp" alt="Aletheia">
     <div>
         <h1>Tableau de Bord d'Évaluation</h1>
         <p>
