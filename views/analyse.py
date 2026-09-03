@@ -355,6 +355,28 @@ st.markdown(
 
 FILTER_JOKER = "(tous)"
 
+MODE_TOUS = "tous"
+MODE_LIBELLES = {
+    MODE_TOUS: "🗂️ Tous",
+    "dataset": "📚 Dataset (réponse du jeu de données)",
+    "generated": "🤖 Généré + juge",
+}
+
+
+def _scopes_du_mode(mode: str) -> list[dict]:
+    """Évaluations disponibles, chacune marquée de son mode d'origine.
+
+    En mode « tous », les deux familles se mélangent dans le tableau alors
+    qu'elles ne se lisent pas au même endpoint : `_mode` accompagne chaque
+    ligne pour que la baseline soit ensuite cherchée là où elle se trouve.
+    """
+    modes = ("dataset", "generated") if mode == MODE_TOUS else (mode,)
+    return [
+        {**scope, "_mode": m}
+        for m in modes
+        for scope in (list_evaluated_models(mode=m) or [])
+    ]
+
 
 def _filter_options(scopes: list[dict], field: str) -> list[str]:
     """Valeurs distinctes de `field` réellement présentes dans `scopes`,
@@ -367,17 +389,13 @@ def _filter_options(scopes: list[dict], field: str) -> list[str]:
 with st.sidebar:
     st.markdown("### 🔍 Filtres")
 
-    mode = st.radio(
+    mode = st.selectbox(
         "Mode",
-        options=["dataset", "generated"],
-        format_func=lambda m: (
-            "📚 Dataset (réponse du jeu de données)"
-            if m == "dataset"
-            else "🤖 Généré + juge"
-        ),
+        options=[MODE_TOUS, "dataset", "generated"],
+        format_func=lambda m: MODE_LIBELLES[m],
     )
 
-    all_scopes = list_evaluated_models(mode=mode) or []
+    all_scopes = _scopes_du_mode(mode)
 
     dataset_filter = st.selectbox(
         "Dataset", options=_filter_options(all_scopes, "dataset")
@@ -392,7 +410,7 @@ with st.sidebar:
         "Pipeline version", options=_filter_options(all_scopes, "pipeline_version")
     )
     generation_version_filter = FILTER_JOKER
-    if mode == "generated":
+    if mode in ("generated", MODE_TOUS):
         generation_version_filter = st.selectbox(
             "Generation version",
             options=_filter_options(all_scopes, "generation_version"),
@@ -416,7 +434,9 @@ def _matches(scope: dict) -> bool:
         (pipeline_version_filter, scope.get("pipeline_version")),
         (eval_version_filter, scope["eval_version"]),
     ]
-    if mode == "generated":
+    # Seules les lignes générées portent une version de génération : appliquer
+    # le filtre aux autres les écarterait toutes dès qu'il est renseigné.
+    if scope.get("_mode") == "generated":
         checks.append((generation_version_filter, scope.get("generation_version")))
     return all(
         selected == FILTER_JOKER or str(actual) == selected
@@ -425,7 +445,6 @@ def _matches(scope: dict) -> bool:
 
 
 results = [r for r in all_scopes if _matches(r)]
-active_mode = mode
 
 st.markdown(f"### 🔎 {len(results)} résultat(s) sur {len(all_scopes)} au total")
 
@@ -441,6 +460,9 @@ else:
         pd.DataFrame(
             [
                 {
+                    **(
+                        {"Mode": MODE_LIBELLES[r["_mode"]]} if mode == MODE_TOUS else {}
+                    ),
                     "Dataset": r["dataset"],
                     "Model ID": r["model_id"],
                     "Ratio": r["ratio"],
@@ -468,7 +490,7 @@ else:
         st.info("Sélectionne au moins un résultat ci-dessus pour l'afficher.")
     else:
         st.divider()
-        entries = [(scope, fetch_baseline(active_mode, scope)) for scope in selected]
+        entries = [(scope, fetch_baseline(scope["_mode"], scope)) for scope in selected]
 
         if len(entries) == 1:
             scope, baseline_matrix = entries[0]
