@@ -154,6 +154,16 @@ st.markdown(
         line-height: 1.55;
     }
     .verdict .detail b { font-weight: 700; }
+    /* Même traitement que dans le schéma de la page Comment ? : la source
+       nomme une brique empruntée — FEVER_corpus, SelfCheckGPT — et le violet
+       leur est réservé, chasse fixe et petites capitales espacées comprises. */
+    .verdict .detail .source {
+        color: #7A3A93;
+        font-weight: 700;
+        font-family: ui-monospace, Menlo, Consolas, monospace;
+        font-variant: small-caps;
+        letter-spacing: 0.04em;
+    }
     .verdict-vrai { background: #b7e4b0; }
     .verdict-hallucination { background: #f3aaa8; }
     .verdict-incertain { background: #f2e3a3; }
@@ -285,7 +295,7 @@ def construire_verdict(claim: dict) -> str:
         f'<span class="libelle">{texte}</span>'
         f'<span class="score">{score_affiche}</span></summary>'
         f'<div class="detail"><b>Verdict :</b> {etiquette}<br>'
-        f"<b>Source :</b> {source}<br>"
+        f'<span class="source">Source : {source}</span><br>'
         f"<b>Preuve :</b> {preuve}</div>"
         f"</details>"
     )
