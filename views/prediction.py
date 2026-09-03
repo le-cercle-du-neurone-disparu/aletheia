@@ -404,6 +404,10 @@ def afficher_debug(result: dict) -> None:
 
 # --- EN-TÊTE ---
 st.subheader("Posez votre question au LLM.")
+st.caption(
+    "⏱️ Le temps de réponse dépend de la taille du modèle choisi et de "
+    "l'infrastructure sur laquelle tourne Berlue."
+)
 
 # --- SIDEBAR ---
 with st.sidebar:
