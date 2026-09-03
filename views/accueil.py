@@ -708,7 +708,9 @@ st.markdown(
 st.markdown(
     """
 <div class="hero-section">
-    <img class="hero-figure" src="/app/static/berlue-idle.webp" alt="Berlue">
+    <!-- Chemin relatif et non /app/static : un préfixe d'URL, tel qu'en pose un
+         hébergement sous chemin, casserait la forme absolue. -->
+    <img class="hero-figure" src="app/static/berlue-idle.webp" alt="Berlue">
     <div class="hero-contenu">
     <h1>🏛️ Aletheia</h1>
     <div class="subtitle">Le Moteur de Vérité pour les LLMs</div>
@@ -718,7 +720,7 @@ st.markdown(
         <span class="hero-badge">🤖 Llama</span>
     </div>
     </div>
-    <img class="hero-figure" src="/app/static/aletheia.webp" alt="Aletheia">
+    <img class="hero-figure" src="app/static/aletheia.webp" alt="Aletheia">
 </div>
 
 <div class="intro-section">

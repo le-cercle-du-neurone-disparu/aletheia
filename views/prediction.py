@@ -168,7 +168,7 @@ st.markdown(
         width: 1.9em;
         height: 1.9em;
         margin-right: 0.5em;
-        background: url("/app/static/berlue-tete.webp") center / contain no-repeat;
+        background: url("app/static/berlue-tete.webp") center / contain no-repeat;
     }
 
     .ligne-analyse {
@@ -194,7 +194,7 @@ def saluer_reponse() -> None:
     """
     st.markdown(
         """
-<div class="berlue-envol"><img src="/app/static/berlue-envol.webp" alt=""></div>
+<div class="berlue-envol"><img src="app/static/berlue-envol.webp" alt=""></div>
 <style>
 .berlue-envol {
     position: fixed;
