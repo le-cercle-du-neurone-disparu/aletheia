@@ -18,3 +18,10 @@ local_setup: ## Crée le venv, installe les dépendances, génère .env si besoi
 	@echo "📚 Installing project and dependencies in editable mode..."
 	pip install -e .
 	@bash scripts/setup_env.sh
+
+# ==============================================================================
+# 🎞️ SCHÉMA
+# ==============================================================================
+
+schema_gif: ## Regénère static/schema-anime.gif depuis le SVG de views/comment.py
+	@python scripts/schema_gif.py
