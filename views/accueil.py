@@ -533,10 +533,70 @@ st.markdown(
         margin-top: 0.5rem !important;
     }
     
+    /* ===== DÉPÔTS ===== */
+    /* Mêmes fond, bordure et survol que .about-item : ces cartes sont du même
+       registre, une fiche par objet. La carte entière est le lien, la cible
+       n'est donc pas réduite au seul libellé. */
+    .repo-grid {
+        display: grid !important;
+        grid-template-columns: repeat(3, 1fr) !important;
+        gap: 1rem !important;
+        margin: 1rem 0 !important;
+    }
+    .repo-card {
+        display: block !important;
+        background: var(--bg-card) !important;
+        backdrop-filter: blur(10px) !important;
+        border: 1px solid var(--border-color) !important;
+        border-radius: 10px !important;
+        padding: 1.2rem !important;
+        text-decoration: none !important;
+        transition: all 0.3s ease !important;
+    }
+    .repo-card:hover {
+        border-color: var(--primary) !important;
+        transform: translateY(-2px) !important;
+    }
+    .repo-card .icon {
+        font-size: 1.6rem !important;
+        line-height: 1 !important;
+    }
+    .repo-card .name {
+        color: var(--text-primary) !important;
+        font-size: 1.1rem !important;
+        font-weight: 600 !important;
+        margin-top: 0.4rem !important;
+    }
+    .repo-card .role {
+        color: var(--text-secondary) !important;
+        font-size: 0.75rem !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.05em !important;
+        margin-top: 0.1rem !important;
+    }
+    .repo-card .detail {
+        color: var(--text-secondary) !important;
+        font-size: 0.82rem !important;
+        line-height: 1.5 !important;
+        margin-top: 0.6rem !important;
+    }
+    /* Chasse fixe : c'est un chemin de dépôt, pas une phrase. */
+    .repo-card .chemin {
+        display: block !important;
+        margin-top: 0.8rem !important;
+        font-family: ui-monospace, Menlo, Consolas, monospace !important;
+        font-size: 0.76rem !important;
+        color: var(--primary) !important;
+        overflow-wrap: break-word !important;
+    }
+
     /* ===== RESPONSIVE ===== */
     @media (max-width: 768px) {
         .process-grid, .about-grid {
             grid-template-columns: repeat(2, 1fr) !important;
+        }
+        .repo-grid {
+            grid-template-columns: 1fr !important;
         }
         .feature-grid {
             grid-template-columns: 1fr !important;
@@ -833,6 +893,64 @@ st.markdown(
             ce qui y est réellement installé.
         </div>
     </div>
+</div>
+""",
+    unsafe_allow_html=True,
+)
+
+st.divider()
+
+# --- LES DÉPÔTS ---
+# Les trois dépôts du projet : l'interface, le moteur, et la veille qui les
+# documente. L'ordre suit celui du trajet d'une question — on part de ce que
+# l'utilisateur a sous les yeux.
+ORGANISATION = "https://github.com/le-cercle-du-neurone-disparu"
+# La veille se lit, elle ne se clone pas : on pointe le dossier publié plutôt
+# que ses sources. Le dépôt reste accessible depuis la page.
+DOSSIER_ETUDE = (
+    "https://le-cercle-du-neurone-disparu.github.io/etude-recherche-hallucination-llm/"
+)
+
+st.markdown(
+    '<div class="section-title">📦 Le code</div>', unsafe_allow_html=True
+)
+
+st.markdown(
+    f"""
+<div class="repo-grid">
+    <a class="repo-card" href="{ORGANISATION}/aletheia" target="_blank" rel="noopener">
+        <div class="icon">🏛️</div>
+        <div class="name">Aletheia</div>
+        <div class="role">Interface</div>
+        <div class="detail">
+            L'application Streamlit que vous avez sous les yeux : les pages de
+            prédiction, d'analyse et de présentation. Elle n'embarque aucun
+            modèle, elle interroge Berlue.
+        </div>
+        <span class="chemin">le-cercle-du-neurone-disparu/aletheia</span>
+    </a>
+    <a class="repo-card" href="{ORGANISATION}/berlue" target="_blank" rel="noopener">
+        <div class="icon">🔬</div>
+        <div class="name">Berlue</div>
+        <div class="role">Moteur de vérification</div>
+        <div class="detail">
+            L'API qui fait le travail : découpage en affirmations, RAG sur le
+            corpus FEVER, SelfCheckGPT, puis fusion en un score. Elle ne connaît
+            pas l'interface.
+        </div>
+        <span class="chemin">le-cercle-du-neurone-disparu/berlue</span>
+    </a>
+    <a class="repo-card" href="{DOSSIER_ETUDE}" target="_blank" rel="noopener">
+        <div class="icon">📚</div>
+        <div class="name">Étude &amp; recherche</div>
+        <div class="role">Veille</div>
+        <div class="detail">
+            L'état du terrain sur lequel s'appuient les deux autres : groupes de
+            travail, papiers de référence, benchmarks et publications grand
+            public sur la détection d'hallucinations.
+        </div>
+        <span class="chemin">le-cercle-du-neurone-disparu.github.io/<wbr>etude-recherche-hallucination-llm</span>
+    </a>
 </div>
 """,
     unsafe_allow_html=True,
