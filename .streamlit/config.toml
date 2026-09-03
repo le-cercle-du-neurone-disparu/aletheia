@@ -1,8 +1,8 @@
-# Barre d'outils réduite : masque le bouton « Deploy » et le menu développeur,
-# qui n'ont d'intérêt pour personne ici — ni en local, ni pour un visiteur de
-# l'app déployée.
+# « viewer » et non « minimal » : masque le bouton « Deploy » et les options de
+# développement, mais conserve le menu de réglages — c'est lui qui porte le
+# choix entre thème clair et sombre, dont les visiteurs ont besoin.
 [client]
-toolbarMode = "minimal"
+toolbarMode = "viewer"
 
 # Les visuels sont servis comme fichiers plutôt qu'encodés dans la page :
 # l'animation de Berlue pèse 300 Ko, que le navigateur met en cache une fois
