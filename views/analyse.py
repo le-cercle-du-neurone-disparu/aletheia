@@ -353,11 +353,15 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-FILTER_JOKER = "(tous)"
+# Un seul libellé pour « pas de filtre », partagé par le mode et les autres
+# listes : deux formulations pour la même idée se lisaient comme deux notions.
+LIBELLE_TOUS = "🗂️ Tous"
+
+FILTER_JOKER = LIBELLE_TOUS
 
 MODE_TOUS = "tous"
 MODE_LIBELLES = {
-    MODE_TOUS: "🗂️ Tous",
+    MODE_TOUS: LIBELLE_TOUS,
     "dataset": "📚 Dataset (réponse du jeu de données)",
     "generated": "🤖 Généré + juge",
 }
