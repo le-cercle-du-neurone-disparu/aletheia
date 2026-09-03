@@ -39,6 +39,10 @@ st.markdown(
        élément : le header, placé après, se retrouvait décalé de sa largeur.
        `fixed` le sort de cette rangée — le faire passer en tête avec un
        flex-wrap renvoyait le contenu sous la colonne dès qu'elle s'ouvrait. */
+    /* Aucune couleur imposée : Streamlit habille son bandeau selon le thème, et
+       y place des icônes — le menu de réglages, la flèche de la colonne —
+       claires en sombre. Les forcer sur un fond clair les rendait invisibles.
+       Ne reste ici que le positionnement. */
     header[data-testid="stHeader"] {
         position: fixed !important;
         top: 0 !important;
@@ -46,9 +50,6 @@ st.markdown(
         right: 0 !important;
         width: 100vw !important;
         z-index: 999999 !important;
-        background: #f0f2f6 !important;
-        backdrop-filter: none !important;
-        border-bottom: 1px solid #d6d9e0 !important;
     }
     /* La rangée de liens est le .rc-overflow du header : stTopNavLinkContainer
        n'enveloppe qu'un lien, le centrer ne déplacerait donc rien. Les classes
@@ -58,15 +59,7 @@ st.markdown(
         width: 100%;
         justify-content: center;
     }
-    [data-testid="stTopNavLink"],
-    [data-testid="stTopNavLink"] * {
-        color: #1a1a2e !important;
-        font-weight: 600;
-    }
-    [data-testid="stTopNavLink"][aria-current="page"],
-    [data-testid="stTopNavLink"][aria-current="page"] * {
-        color: #667eea !important;
-    }
+    [data-testid="stTopNavLink"] { font-weight: 600; }
 </style>
 """,
     unsafe_allow_html=True,
@@ -99,10 +92,13 @@ st.markdown(
         right: 0;
         width: 100vw;
         padding: 0.5rem 1rem;
-        background: #f0f2f6;
-        border-top: 1px solid #d6d9e0;
+        /* Teinte neutre plutôt qu'une couleur fixe : elle s'assombrit sur fond
+           clair et s'éclaircit sur fond sombre, sans jamais masquer le texte. */
+        background: rgba(128, 128, 128, 0.12);
+        backdrop-filter: blur(6px);
+        border-top: 1px solid rgba(128, 128, 128, 0.25);
         text-align: center;
-        color: #1a1a2e;
+        color: inherit;
         z-index: 999998;
     }
     .pied-de-page .avertissement {
