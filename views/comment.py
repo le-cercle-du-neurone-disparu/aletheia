@@ -266,15 +266,23 @@ SCHEMA = (
   <g>
     <image href="app/static/aletheia-portrait.webp" x="190" y="-50" width="130" height="190"
            preserveAspectRatio="xMidYMid slice"/>
-    <rect x="190" y="-50" width="130" height="190" fill="none" stroke="{OR}" stroke-width="2"/>
+    <rect x="190" y="-50" width="130" height="190" fill="none" stroke="{
+        OR
+    }" stroke-width="2"/>
     <rect x="194" y="-46" width="122" height="182" fill="none" stroke="{OR_PALE}"/>
   </g>
   <g>
     <image href="app/static/berlue-hero.webp" x="640" y="-24" width="300" height="164"
            preserveAspectRatio="xMidYMid slice"/>
-    <rect x="640" y="-24" width="300" height="164" fill="none" stroke="{BLEU}" stroke-width="1.5"/>
-    <path d="M640,-10 L640,-24 L654,-24" fill="none" stroke="{BLEU}" stroke-width="2.6"/>
-    <path d="M940,126 L940,140 L926,140" fill="none" stroke="{BLEU}" stroke-width="2.6"/>
+    <rect x="640" y="-24" width="300" height="164" fill="none" stroke="{
+        BLEU
+    }" stroke-width="1.5"/>
+    <path d="M640,-10 L640,-24 L654,-24" fill="none" stroke="{
+        BLEU
+    }" stroke-width="2.6"/>
+    <path d="M940,126 L940,140 L926,140" fill="none" stroke="{
+        BLEU
+    }" stroke-width="2.6"/>
   </g>
 
   <!-- L'utilisateur : le Penseur, en vignette comme les deux composants, mais
@@ -283,8 +291,12 @@ SCHEMA = (
   <g>
     <image href="app/static/penseur.webp" x="-8" y="-4" width="106" height="137"
            preserveAspectRatio="xMidYMid meet"/>
-    <rect x="-15" y="-11" width="120" height="151" fill="none" stroke="{BRONZE}" stroke-width="2"/>
-    <rect x="-11" y="-7" width="112" height="143" fill="none" stroke="{BRONZE}" stroke-opacity="0.45"/>
+    <rect x="-15" y="-11" width="120" height="151" fill="none" stroke="{
+        BRONZE
+    }" stroke-width="2"/>
+    <rect x="-11" y="-7" width="112" height="143" fill="none" stroke="{
+        BRONZE
+    }" stroke-opacity="0.45"/>
     <text x="45" y="160" font-size="13.5" text-anchor="middle">Utilisateur</text>
   </g>
 
@@ -311,15 +323,22 @@ SCHEMA = (
 
   {_composant_berlue(435, 240, 180, 62, "LLM", "", "ollama · transformers")}
   {_composant_berlue(705, 240, 200, 62, "Extracteur", "d'affirmations")}
-  {_composant_berlue(435, 390, 205, 62, "SelfCheckGPT", "", "module selfcheckgpt",
-                     source=True)}
+  {
+        _composant_berlue(
+            435, 390, 205, 62, "SelfCheckGPT", "", "module selfcheckgpt", source=True
+        )
+    }
   {_composant_berlue(660, 520, 220, 62, "Fusion Score")}
 
   <!-- RAG et son corpus -->
   <g>
     <rect x="975" y="240" width="175" height="210" fill="#fff" stroke="{BLEU}"/>
-    <path d="M975,252 L975,240 L987,240" fill="none" stroke="{BLEU}" stroke-width="2.6"/>
-    <path d="M1150,438 L1150,450 L1138,450" fill="none" stroke="{BLEU}" stroke-width="2.6"/>
+    <path d="M975,252 L975,240 L987,240" fill="none" stroke="{
+        BLEU
+    }" stroke-width="2.6"/>
+    <path d="M1150,438 L1150,450 L1138,450" fill="none" stroke="{
+        BLEU
+    }" stroke-width="2.6"/>
     <text x="1062" y="268" font-size="14" text-anchor="middle" font-weight="700">RAG</text>
     <text x="1062" y="286" font-size="14" text-anchor="middle" font-weight="700">Index vectoriel</text>
     <text x="1062" y="304" font-size="12" text-anchor="middle" font-family="{MONO}"
@@ -347,7 +366,9 @@ SCHEMA = (
         marker-end="url(#archArrow)"/>
   <path id="pFusItf" class="liaison" d="M770,582 L770,650 L255,650 L255,306"
         marker-end="url(#archArrow)"/>
-  <text x="578" y="350" font-size="12.5" font-family="{MONO}" fill="{BLEU}">5 régénérations</text>
+  <text x="578" y="350" font-size="12.5" font-family="{MONO}" fill="{
+        BLEU
+    }">5 régénérations</text>
   <text x="578" y="368" font-size="12.5" font-family="{MONO}" fill="{BLEU}"
         opacity="0.8">températures croissantes</text>
 
