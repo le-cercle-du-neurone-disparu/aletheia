@@ -188,7 +188,23 @@ st.markdown(
         color: inherit;
         font-size: 0.95rem;
         margin: 0.2rem 0 0.9rem 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex-wrap: wrap;
     }
+    /* Mêmes fonds que les verdicts de la liste : un compteur et les lignes
+       qu'il dénombre doivent se reconnaître à la couleur. */
+    .ligne-analyse .compte {
+        padding: 0.15rem 0.6rem;
+        border-radius: 6px;
+        color: #111111;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+    .ligne-analyse .compte-vrai { background: #b7e4b0; }
+    .ligne-analyse .compte-hallucination { background: #f3aaa8; }
+    .ligne-analyse .compte-incertain { background: #f5c98f; }
 </style>
 """,
     unsafe_allow_html=True,
@@ -549,9 +565,12 @@ if lancer:
                         uncertain = len(statuses) - verified - hallucinated
 
                         st.markdown(
-                            f'<div class="ligne-analyse"><b>Analyse :</b> '
-                            f"[{verified} vrai / {hallucinated} hallucination / "
-                            f"{uncertain} incertain]</div>",
+                            '<div class="ligne-analyse"><b>Analyse :</b>'
+                            f'<span class="compte compte-vrai">{verified} vrai</span>'
+                            '<span class="compte compte-hallucination">'
+                            f"{hallucinated} hallucination</span>"
+                            f'<span class="compte compte-incertain">{uncertain} incertain'
+                            "</span></div>",
                             unsafe_allow_html=True,
                         )
 
