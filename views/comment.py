@@ -63,7 +63,9 @@ def _lignes(cx, cy, lignes):
 
 def _composant_aletheia(x, y, w, h, titre, sous_titre=""):
     """Bloc classique : fond ivoire, double filet d'or, titre en romain."""
-    lignes = [(14.5, titre, f'font-family="{SERIF}" font-weight="700" fill="{ENCRE_OR}"')]
+    lignes = [
+        (14.5, titre, f'font-family="{SERIF}" font-weight="700" fill="{ENCRE_OR}"')
+    ]
     if sous_titre:
         lignes.append(
             (12.5, sous_titre, f'font-family="{SERIF}" font-style="italic" fill="{OR}"')
@@ -157,7 +159,14 @@ MOUVEMENTS = "".join(
         # croissantes, qui partent en parallèle vers SelfCheckGPT.
         _bloc("pLlmExt", "réponse", CYAN, 3.7, 5.0),
         *[
-            _bloc("pLlmScg", "réponse", couleur, 3.7 + 0.35 * i, 4.6 + 0.35 * i, police=10.5)
+            _bloc(
+                "pLlmScg",
+                "réponse",
+                couleur,
+                3.7 + 0.35 * i,
+                4.6 + 0.35 * i,
+                police=10.5,
+            )
             for i, couleur in enumerate(TEMPERATURES)
         ],
         _halo(705, 240, 200, 62, CYAN, 4.9, 5.6),
