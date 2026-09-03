@@ -72,16 +72,10 @@ for path in image_paths:
 # Construction du style avec arrière-plan
 if bg_image_base64:
     background_style = f"""
-    /* Forcer l'arrière-plan sur tous les éléments */
-    html, body, .stApp, .stApp > div, .stApp > header, .stApp > .main {{
-        background-image: url("data:image/png;base64,{bg_image_base64}") !important;
-        background-size: cover !important;
-        background-position: center !important;
-        background-attachment: fixed !important;
-        background-repeat: no-repeat !important;
-    }}
-    
-    /* Overlay pour améliorer la lisibilité du contenu */
+    /* L'image porte elle-même son alpha, sur une couche dédiée. Elle était
+       auparavant posée en fond puis recouverte d'un voile sombre opaque à
+       0,85 : la teinte du voile déteignait sur toute la page, alors qu'ici
+       seule l'image faiblit. */
     .stApp::before {{
         content: '';
         position: fixed !important;
@@ -89,7 +83,11 @@ if bg_image_base64:
         left: 0 !important;
         right: 0 !important;
         bottom: 0 !important;
-        background: rgba(10, 10, 15, 0.85) !important;
+        background-image: url("data:image/png;base64,{bg_image_base64}") !important;
+        background-size: cover !important;
+        background-position: center !important;
+        background-repeat: no-repeat !important;
+        opacity: 0.5 !important;
         z-index: 0 !important;
         pointer-events: none !important;
     }}
