@@ -911,9 +911,7 @@ DOSSIER_ETUDE = (
     "https://le-cercle-du-neurone-disparu.github.io/etude-recherche-hallucination-llm/"
 )
 
-st.markdown(
-    '<div class="section-title">📦 Le code</div>', unsafe_allow_html=True
-)
+st.markdown('<div class="section-title">📦 Le code</div>', unsafe_allow_html=True)
 
 st.markdown(
     f"""
