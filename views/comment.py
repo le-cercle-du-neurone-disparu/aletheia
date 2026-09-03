@@ -25,6 +25,7 @@ CYCLE = 15.0  # durée d'un tour complet, en secondes
 OR = "#A8842A"
 OR_PALE = "#D9C27A"
 IVOIRE = "#FBF6EA"
+BRONZE = "#7C6A45"
 ENCRE_OR = "#4A3B12"
 SERIF = '"Palatino Linotype", Palatino, Georgia, serif'
 
@@ -221,7 +222,7 @@ STYLE = """
 SCHEMA = (
     STYLE
     + f"""
-<svg viewBox="0 -60 1200 740" role="img" aria-label="Architecture de la démo. À gauche, l'utilisateur échange avec Aletheia, l'application web. À droite, Berlue, le moteur de vérification : l'interface d'Aletheia passe la question au LLM, qui produit une réponse envoyée à l'extracteur d'affirmations et, en parallèle, cinq réponses régénérées à températures croissantes envoyées à SelfCheckGPT. L'extracteur découpe la réponse en affirmations et interroge le RAG et son index vectoriel FAISS, construit sur le corpus FEVER. SelfCheckGPT et RAG envoient chacun leur évaluation à la fusion de score, qui fabrique le score, sa catégorisation et son analyse, et les renvoie à l'interface puis à l'utilisateur.">
+<svg viewBox="-20 -60 1220 740" role="img" aria-label="Architecture de la démo. À gauche, l'utilisateur échange avec Aletheia, l'application web. À droite, Berlue, le moteur de vérification : l'interface d'Aletheia passe la question au LLM, qui produit une réponse envoyée à l'extracteur d'affirmations et, en parallèle, cinq réponses régénérées à températures croissantes envoyées à SelfCheckGPT. L'extracteur découpe la réponse en affirmations et interroge le RAG et son index vectoriel FAISS, construit sur le corpus FEVER. SelfCheckGPT et RAG envoient chacun leur évaluation à la fusion de score, qui fabrique le score, sa catégorisation et son analyse, et les renvoie à l'interface puis à l'utilisateur.">
   <defs>
     <marker id="archArrow" viewBox="0 0 10 10" refX="8" refY="5"
             markerWidth="7" markerHeight="7" orient="auto-start-reverse">
@@ -257,15 +258,15 @@ SCHEMA = (
     <path d="M940,126 L940,140 L926,140" fill="none" stroke="{BLEU}" stroke-width="2.6"/>
   </g>
 
-  <!-- Utilisateur (acteur), à gauche et à hauteur de l'interface : il s'adresse
-       à Aletheia de plain-pied, sans que la flèche traverse son fronton. -->
+  <!-- L'utilisateur : le Penseur, en vignette comme les deux composants, mais
+       dans un cadre de bronze — il n'appartient ni au monde d'Aletheia ni à
+       celui de Berlue, il les regarde travailler. Sa question descend de là. -->
   <g>
-    <circle cx="58" cy="234" r="10" fill="none" stroke="currentColor"/>
-    <line x1="58" y1="244" x2="58" y2="268" stroke="currentColor"/>
-    <line x1="41" y1="253" x2="75" y2="253" stroke="currentColor"/>
-    <line x1="58" y1="268" x2="43" y2="289" stroke="currentColor"/>
-    <line x1="58" y1="268" x2="73" y2="289" stroke="currentColor"/>
-    <text x="58" y="309" font-size="13.5" text-anchor="middle">Utilisateur</text>
+    <image href="app/static/penseur.webp" x="-5" y="11" width="100" height="129"
+           preserveAspectRatio="xMidYMid meet"/>
+    <rect x="-5" y="11" width="100" height="129" fill="none" stroke="{BRONZE}" stroke-width="2"/>
+    <rect x="-1" y="15" width="92" height="121" fill="none" stroke="{BRONZE}" stroke-opacity="0.45"/>
+    <text x="45" y="160" font-size="13.5" text-anchor="middle">Utilisateur</text>
   </g>
 
   <!-- Aletheia : l'application. Marbre, or et lettres romaines. -->
@@ -312,9 +313,9 @@ SCHEMA = (
   <!-- Liaisons. Ce sont aussi les trajectoires des blocs animés, d'où les
        identifiants et le choix de <path> plutôt que <line>/<polyline> :
        <mpath> ne sait suivre qu'un <path>. -->
-  <path id="pUser" class="liaison" d="M88,271 L146,271"
+  <path id="pUser" class="liaison" d="M45,170 L45,271 L146,271"
         marker-end="url(#archArrow)" marker-start="url(#archArrow)"/>
-  <path id="pUserRetour" d="M146,271 L88,271" fill="none" stroke="none"/>
+  <path id="pUserRetour" d="M146,271 L45,271 L45,170" fill="none" stroke="none"/>
   <path id="pItfLlm" class="liaison" d="M340,271 L431,271" marker-end="url(#archArrow)"/>
   <path id="pLlmExt" class="liaison" d="M615,271 L701,271" marker-end="url(#archArrow)"/>
   <path id="pLlmScg" class="liaison" d="M525,302 L525,386" marker-end="url(#archArrow)"/>
@@ -335,7 +336,7 @@ SCHEMA = (
 """
 )
 
-SCHEMA_HAUTEUR = 720
+SCHEMA_HAUTEUR = 710
 
 # ==============================================================================
 # INTERFACE
