@@ -19,17 +19,18 @@ import streamlit.components.v1 as components
 # CONFIGURATION
 # ==============================================================================
 
-CYCLE = 13.0  # durée d'un tour complet, en secondes
+CYCLE = 15.0  # durée d'un tour complet, en secondes
 
 # Deux ambiances, deux palettes. Côté Aletheia : marbre et or, lettres romaines.
 OR = "#A8842A"
 OR_PALE = "#D9C27A"
 IVOIRE = "#FBF6EA"
+ENCRE_OR = "#4A3B12"
 SERIF = '"Palatino Linotype", Palatino, Georgia, serif'
 
 # Côté Berlue : encre froide, chasse fixe, angles vifs.
 BLEU = "#345AB2"
-CYAN = "#009DA8"
+CYAN = "#00808A"
 VERT = "#2A9F56"
 ORANGE = "#F86F32"
 FOND_TECH = "#EFF4FB"
@@ -44,43 +45,52 @@ TEMPERATURES = ["#2F6FBF", "#5B86C9", "#9A82AE", "#D3796F", "#E8533F"]
 # ==============================================================================
 
 
+def _lignes(cx, cy, lignes):
+    """Empile des lignes de texte, centrées sur (cx, cy)."""
+    interligne = 6
+    total = sum(taille + interligne for taille, _, _ in lignes) - interligne
+    y = cy - total / 2
+    sortie = []
+    for taille, texte, attributs in lignes:
+        y += taille
+        sortie.append(
+            f'<text x="{cx}" y="{y:.1f}" font-size="{taille}" text-anchor="middle"'
+            f" {attributs}>{texte}</text>"
+        )
+        y += interligne
+    return "".join(sortie)
+
+
 def _composant_aletheia(x, y, w, h, titre, sous_titre=""):
     """Bloc classique : fond ivoire, double filet d'or, titre en romain."""
-    st_html = (
-        f'<text x="{x + w / 2}" y="{y + h - 15}" font-size="11.5" text-anchor="middle"'
-        f' font-family="{SERIF}" font-style="italic" fill="{OR}">{sous_titre}</text>'
-        if sous_titre
-        else ""
-    )
+    lignes = [(14.5, titre, f'font-family="{SERIF}" font-weight="700" fill="{ENCRE_OR}"')]
+    if sous_titre:
+        lignes.append(
+            (12.5, sous_titre, f'font-family="{SERIF}" font-style="italic" fill="{OR}"')
+        )
     return f"""
   <g>
     <rect x="{x}" y="{y}" width="{w}" height="{h}" fill="{IVOIRE}" stroke="{OR}"/>
     <rect x="{x + 4}" y="{y + 4}" width="{w - 8}" height="{h - 8}" fill="none"
           stroke="{OR_PALE}"/>
-    <text x="{x + w / 2}" y="{y + (h / 2 if not sous_titre else h / 2 - 6)}"
-          font-size="13" text-anchor="middle" font-family="{SERIF}"
-          font-weight="700" fill="#4A3B12">{titre}</text>
-    {st_html}
+    {_lignes(x + w / 2, y + h / 2, lignes)}
   </g>"""
 
 
 def _composant_berlue(x, y, w, h, titre, ligne2="", sous_titre=""):
     """Bloc technique : angles vifs, repères d'angle, sous-titre en chasse fixe."""
-    corps = f'<text x="{x + w / 2}" y="{y + 24}" font-size="12.5" text-anchor="middle" font-weight="700">{titre}</text>'
+    lignes = [(14, titre, 'font-weight="700"')]
     if ligne2:
-        corps += f'<text x="{x + w / 2}" y="{y + 40}" font-size="12.5" text-anchor="middle" font-weight="700">{ligne2}</text>'
+        lignes.append((14, ligne2, 'font-weight="700"'))
     if sous_titre:
-        corps += (
-            f'<text x="{x + w / 2}" y="{y + (56 if ligne2 else 41)}" font-size="10"'
-            f' text-anchor="middle" font-family="{MONO}" fill="{CYAN}">{sous_titre}</text>'
-        )
+        lignes.append((12, sous_titre, f'font-family="{MONO}" fill="{CYAN}"'))
     return f"""
   <g>
     <rect x="{x}" y="{y}" width="{w}" height="{h}" fill="#fff" stroke="{BLEU}"/>
-    <path d="M{x},{y + 11} L{x},{y} L{x + 11},{y}" fill="none" stroke="{BLEU}" stroke-width="2.4"/>
-    <path d="M{x + w},{y + h - 11} L{x + w},{y + h} L{x + w - 11},{y + h}" fill="none"
-          stroke="{BLEU}" stroke-width="2.4"/>
-    {corps}
+    <path d="M{x},{y + 12} L{x},{y} L{x + 12},{y}" fill="none" stroke="{BLEU}" stroke-width="2.6"/>
+    <path d="M{x + w},{y + h - 12} L{x + w},{y + h} L{x + w - 12},{y + h}" fill="none"
+          stroke="{BLEU}" stroke-width="2.6"/>
+    {_lignes(x + w / 2, y + h / 2, lignes)}
   </g>"""
 
 
@@ -99,32 +109,16 @@ def _minutage(debut, fin, fondu):
     return t0, t1, min(t0 + fondu, t1), max(t1 - fondu, t0)
 
 
-def _bloc(chemin, libelle, couleur, debut, fin, largeur=None, police=9.5, ronde=4):
+def _bloc(chemin, libelle, couleur, debut, fin, largeur=None, police=11.5, ronde=4):
     """Un bloc étiqueté qui parcourt `chemin` entre `debut` et `fin`."""
-    largeur = largeur if largeur is not None else max(26, 6.2 * len(libelle) + 16)
-    t0, t1, a, b = _minutage(debut, fin, 0.012)
-    return f"""
-  <g opacity="0">
-    <rect x="{-largeur / 2:.1f}" y="-10" width="{largeur:.1f}" height="20" rx="{ronde}"
-          fill="{couleur}"/>
-    <text x="0" y="4" font-size="{police}" fill="#fff" text-anchor="middle"
-          font-weight="600">{libelle}</text>
-    <animateMotion dur="{CYCLE}s" repeatCount="indefinite" calcMode="linear"
-                   keyPoints="0;0;1;1" keyTimes="0;{t0:.4f};{t1:.4f};1" rotate="0">
-      <mpath href="#{chemin}"/>
-    </animateMotion>
-    <animate attributeName="opacity" dur="{CYCLE}s" repeatCount="indefinite"
-             values="0;0;1;1;0;0" keyTimes="0;{t0:.4f};{a:.4f};{b:.4f};{t1:.4f};1"/>
-  </g>"""
-
-
-def _pastille(chemin, couleur, debut, fin, cote=15):
-    """Une pastille de couleur — un échantillon régénéré, sans étiquette."""
+    largeur = largeur if largeur is not None else 0.62 * police * len(libelle) + 20
     t0, t1, a, b = _minutage(debut, fin, 0.010)
     return f"""
   <g opacity="0">
-    <rect x="{-cote / 2:.1f}" y="{-cote / 2:.1f}" width="{cote}" height="{cote}" rx="3"
+    <rect x="{-largeur / 2:.1f}" y="-13" width="{largeur:.1f}" height="26" rx="{ronde}"
           fill="{couleur}"/>
+    <text x="0" y="{police * 0.36:.1f}" font-size="{police}" fill="#fff"
+          text-anchor="middle" font-weight="600">{libelle}</text>
     <animateMotion dur="{CYCLE}s" repeatCount="indefinite" calcMode="linear"
                    keyPoints="0;0;1;1" keyTimes="0;{t0:.4f};{t1:.4f};1" rotate="0">
       <mpath href="#{chemin}"/>
@@ -154,41 +148,35 @@ def _halo(x, y, w, h, couleur, debut, fin):
 MOUVEMENTS = "".join(
     [
         # L'utilisateur pose sa question à l'interface d'Aletheia.
-        _bloc("pUser", "?", OR, 0.3, 1.5, largeur=26, police=12, ronde=13),
-        _halo(170, 236, 170, 58, OR, 1.4, 1.9),
+        _bloc("pUser", "?", OR, 0.3, 1.6, largeur=30, police=15, ronde=15),
+        _halo(170, 240, 170, 62, OR, 1.5, 2.0),
         # L'interface la transmet au LLM de Berlue.
-        _bloc("pItfLlm", "question", OR, 1.7, 2.8),
-        _halo(430, 236, 170, 58, CYAN, 2.7, 3.4),
-        # Le LLM produit sa réponse, et cinq régénérations à températures croissantes.
-        _bloc("pLlmExt", "réponse", CYAN, 3.4, 4.6),
+        _bloc("pItfLlm", "question", OR, 1.8, 3.0),
+        _halo(435, 240, 180, 62, CYAN, 2.9, 3.7),
+        # Le LLM produit sa réponse — et cinq régénérations, à températures
+        # croissantes, qui partent en parallèle vers SelfCheckGPT.
+        _bloc("pLlmExt", "réponse", CYAN, 3.7, 5.0),
         *[
-            _pastille("pLlmScg", couleur, 3.4 + 0.18 * i, 4.2 + 0.18 * i)
+            _bloc("pLlmScg", "réponse", couleur, 3.7 + 0.35 * i, 4.6 + 0.35 * i, police=10.5)
             for i, couleur in enumerate(TEMPERATURES)
         ],
-        _halo(650, 236, 195, 58, CYAN, 4.5, 5.1),
-        _halo(430, 346, 195, 58, BLEU, 5.2, 6.7),
+        _halo(705, 240, 200, 62, CYAN, 4.9, 5.6),
+        _halo(435, 390, 205, 62, BLEU, 5.5, 7.4),
         # L'extracteur découpe la réponse en affirmations, envoyées au RAG.
         *[
-            _bloc(
-                "pExtRag",
-                "claim",
-                BLEU,
-                4.9 + 0.32 * i,
-                5.9 + 0.32 * i,
-                largeur=42,
-                police=8.5,
-            )
+            _bloc("pExtRag", "claim", BLEU, 5.4 + 0.34 * i, 6.6 + 0.34 * i, police=11)
             for i in range(3)
         ],
-        _halo(895, 236, 165, 195, ORANGE, 6.0, 6.7),
+        _halo(975, 240, 175, 210, ORANGE, 6.8, 7.6),
         # Les deux vérifications rendent leur verdict à la fusion.
-        _bloc("pScgFus", "éval. + analyse", VERT, 6.8, 8.0, police=8.5),
-        _bloc("pRagFus", "éval. + analyse", VERT, 6.8, 8.0, police=8.5),
-        _halo(585, 468, 205, 58, VERT, 7.9, 8.7),
-        # La fusion fabrique le score, qui remonte à l'utilisateur.
-        _bloc("pFusItf", "score + catégorie + analyse", ORANGE, 8.8, 10.4, police=8.5),
-        _halo(170, 236, 170, 58, OR, 10.3, 10.8),
-        _bloc("pUserRetour", "résultat", OR, 10.6, 11.7),
+        _bloc("pScgFus", "éval. + analyse", VERT, 7.6, 9.0, police=11),
+        _bloc("pRagFus", "éval. + analyse", VERT, 7.6, 9.0, police=11),
+        _halo(660, 520, 220, 62, VERT, 8.9, 9.8),
+        # La fusion fabrique le score et le renvoie — lentement, c'est le
+        # résultat, on doit avoir le temps de le lire.
+        _bloc("pFusItf", "score + catégorie + analyse", ORANGE, 9.8, 12.6, police=11.5),
+        _halo(170, 240, 170, 62, OR, 12.5, 13.1),
+        _bloc("pUserRetour", "analyse", OR, 12.8, 14.2),
     ]
 )
 
@@ -207,7 +195,7 @@ STYLE = """
 <style>
   body { margin: 0; background: hsl(222 32% 96%); border-radius: 12px;
          padding: 1.25rem 0; font-family: "Source Sans Pro", sans-serif; }
-  svg { display: block; width: 100%; max-width: 1040px; height: auto;
+  svg { display: block; width: 100%; max-width: 1100px; height: auto;
         margin: 0 auto; color: hsl(222 25% 16%); }
   /* Sans cette règle les libellés retombent sur `fill: black` : `color` ne se
      propage pas au remplissage d'un <text>, seulement aux traits en
@@ -224,7 +212,7 @@ STYLE = """
 SCHEMA = (
     STYLE
     + f"""
-<svg viewBox="0 0 1110 640" role="img" aria-label="Architecture de la démo. À gauche, l'utilisateur échange avec Aletheia, l'application web. À droite, Berlue, le moteur de vérification : l'interface d'Aletheia passe la question au LLM, qui produit une réponse envoyée à l'extracteur d'affirmations et, en parallèle, cinq régénérations à températures croissantes envoyées à SelfCheckGPT. L'extracteur découpe la réponse en affirmations et interroge le RAG et son index vectoriel construit sur le corpus FEVER. SelfCheckGPT et RAG envoient chacun leur évaluation à la fusion de score, qui fabrique le score, sa catégorisation et son analyse, et les renvoie à l'interface puis à l'utilisateur.">
+<svg viewBox="0 -60 1200 740" role="img" aria-label="Architecture de la démo. À gauche, l'utilisateur échange avec Aletheia, l'application web. À droite, Berlue, le moteur de vérification : l'interface d'Aletheia passe la question au LLM, qui produit une réponse envoyée à l'extracteur d'affirmations et, en parallèle, cinq réponses régénérées à températures croissantes envoyées à SelfCheckGPT. L'extracteur découpe la réponse en affirmations et interroge le RAG et son index vectoriel FAISS, construit sur le corpus FEVER. SelfCheckGPT et RAG envoient chacun leur évaluation à la fusion de score, qui fabrique le score, sa catégorisation et son analyse, et les renvoie à l'interface puis à l'utilisateur.">
   <defs>
     <marker id="archArrow" viewBox="0 0 10 10" refX="8" refY="5"
             markerWidth="7" markerHeight="7" orient="auto-start-reverse">
@@ -241,89 +229,108 @@ SCHEMA = (
     </pattern>
   </defs>
 
+  <!-- Vignettes : chacune annonce son monde. Aletheia dans une niche d'or,
+       Berlue dans un cadre technique. Les fichiers sont servis par Streamlit
+       (enableStaticServing), pas encodés dans la page : le navigateur les met
+       en cache une fois. Chemin relatif comme ailleurs — l'iframe de
+       components.html hérite de l'URL de base de la page qui la porte. -->
+  <g>
+    <image href="app/static/aletheia-portrait.webp" x="190" y="-50" width="130" height="190"
+           preserveAspectRatio="xMidYMid slice"/>
+    <rect x="190" y="-50" width="130" height="190" fill="none" stroke="{OR}" stroke-width="2"/>
+    <rect x="194" y="-46" width="122" height="182" fill="none" stroke="{OR_PALE}"/>
+  </g>
+  <g>
+    <image href="app/static/berlue-hero.webp" x="640" y="-24" width="300" height="164"
+           preserveAspectRatio="xMidYMid slice"/>
+    <rect x="640" y="-24" width="300" height="164" fill="none" stroke="{BLEU}" stroke-width="1.5"/>
+    <path d="M640,-10 L640,-24 L654,-24" fill="none" stroke="{BLEU}" stroke-width="2.6"/>
+    <path d="M940,126 L940,140 L926,140" fill="none" stroke="{BLEU}" stroke-width="2.6"/>
+  </g>
+
   <!-- Utilisateur (acteur), à gauche et à hauteur de l'interface : il s'adresse
        à Aletheia de plain-pied, sans que la flèche traverse son fronton. -->
   <g>
-    <circle cx="58" cy="228" r="9" fill="none" stroke="currentColor"/>
-    <line x1="58" y1="237" x2="58" y2="260" stroke="currentColor"/>
-    <line x1="42" y1="246" x2="74" y2="246" stroke="currentColor"/>
-    <line x1="58" y1="260" x2="44" y2="280" stroke="currentColor"/>
-    <line x1="58" y1="260" x2="72" y2="280" stroke="currentColor"/>
-    <text x="58" y="299" font-size="12" text-anchor="middle">Utilisateur</text>
+    <circle cx="58" cy="234" r="10" fill="none" stroke="currentColor"/>
+    <line x1="58" y1="244" x2="58" y2="268" stroke="currentColor"/>
+    <line x1="41" y1="253" x2="75" y2="253" stroke="currentColor"/>
+    <line x1="58" y1="268" x2="43" y2="289" stroke="currentColor"/>
+    <line x1="58" y1="268" x2="73" y2="289" stroke="currentColor"/>
+    <text x="58" y="309" font-size="13.5" text-anchor="middle">Utilisateur</text>
   </g>
 
   <!-- Aletheia : l'application. Marbre, or et lettres romaines. -->
-  <rect x="150" y="150" width="210" height="400" fill="{IVOIRE}" stroke="{OR}"/>
-  <rect x="156" y="156" width="198" height="388" fill="none" stroke="{OR_PALE}"/>
-  <text x="255" y="182" font-size="19" text-anchor="middle" font-family="{SERIF}"
+  <rect x="150" y="150" width="210" height="460" fill="{IVOIRE}" stroke="{OR}"/>
+  <rect x="156" y="156" width="198" height="448" fill="none" stroke="{OR_PALE}"/>
+  <text x="255" y="184" font-size="21" text-anchor="middle" font-family="{SERIF}"
         font-weight="700" fill="{OR}" letter-spacing="1.5">Aletheia</text>
-  <text x="255" y="199" font-size="11.5" text-anchor="middle" font-family="{SERIF}"
-        font-style="italic" fill="{OR}" opacity="0.75">ἀλήθεια — le dévoilement</text>
-  <rect x="167" y="208" width="176" height="11" fill="url(#grecque)"/>
-  {_composant_aletheia(170, 236, 170, 58, "Interface Web", "Streamlit")}
+  <text x="255" y="203" font-size="12.5" text-anchor="middle" font-family="{SERIF}"
+        font-style="italic" fill="{OR}" opacity="0.8">ἀλήθεια — le dévoilement</text>
+  <rect x="167" y="212" width="176" height="11" fill="url(#grecque)"/>
+  {_composant_aletheia(170, 240, 170, 62, "Interface Web", "Streamlit")}
   <!-- Frise du bas en deux pans : le retour du score remonte par l'intervalle. -->
-  <rect x="167" y="524" width="66" height="11" fill="url(#grecque)"/>
-  <rect x="277" y="524" width="66" height="11" fill="url(#grecque)"/>
+  <rect x="167" y="584" width="66" height="11" fill="url(#grecque)"/>
+  <rect x="277" y="584" width="66" height="11" fill="url(#grecque)"/>
 
   <!-- Berlue : le moteur de vérification. Grille, filets et chasse fixe. -->
-  <rect x="405" y="150" width="675" height="400" fill="{FOND_TECH}" stroke="{BLEU}"/>
-  <rect x="405" y="150" width="675" height="400" fill="url(#grilleTech)" stroke="none"/>
-  <text x="742" y="182" font-size="19" text-anchor="middle" font-weight="700"
+  <rect x="405" y="150" width="770" height="460" fill="{FOND_TECH}" stroke="{BLEU}"/>
+  <rect x="405" y="150" width="770" height="460" fill="url(#grilleTech)" stroke="none"/>
+  <text x="790" y="184" font-size="21" text-anchor="middle" font-weight="700"
         fill="{BLEU}" letter-spacing="0.5">Berlue</text>
-  <text x="742" y="199" font-size="10.5" text-anchor="middle" font-family="{MONO}"
-        fill="{BLEU}" opacity="0.7">moteur de vérification</text>
+  <text x="790" y="203" font-size="12" text-anchor="middle" font-family="{MONO}"
+        fill="{BLEU}" opacity="0.75">moteur de vérification</text>
 
-  {_composant_berlue(430, 236, 170, 58, "LLM", "", "ollama · transformers")}
-  {_composant_berlue(650, 236, 195, 58, "Extracteur", "d'affirmations")}
-  {_composant_berlue(430, 346, 195, 58, "SelfCheckGPT", "", "module selfcheckgpt")}
-  {_composant_berlue(585, 468, 205, 58, "Fusion Score")}
+  {_composant_berlue(435, 240, 180, 62, "LLM", "", "ollama · transformers")}
+  {_composant_berlue(705, 240, 200, 62, "Extracteur", "d'affirmations")}
+  {_composant_berlue(435, 390, 205, 62, "SelfCheckGPT", "", "module selfcheckgpt")}
+  {_composant_berlue(660, 520, 220, 62, "Fusion Score")}
 
   <!-- RAG et son corpus -->
   <g>
-    <rect x="895" y="236" width="165" height="195" fill="#fff" stroke="{BLEU}"/>
-    <path d="M895,247 L895,236 L906,236" fill="none" stroke="{BLEU}" stroke-width="2.4"/>
-    <path d="M1060,420 L1060,431 L1049,431" fill="none" stroke="{BLEU}" stroke-width="2.4"/>
-    <text x="977" y="260" font-size="12.5" text-anchor="middle" font-weight="700">RAG</text>
-    <text x="977" y="276" font-size="12.5" text-anchor="middle" font-weight="700">Index vectoriel</text>
-    <text x="977" y="292" font-size="10" text-anchor="middle" font-family="{MONO}"
-          fill="{CYAN}">FAISS · Chroma</text>
-    <ellipse cx="977" cy="330" rx="44" ry="9" fill="none" stroke="{ORANGE}"/>
-    <path d="M933,330 v52 a44,9 0 0 0 88,0 v-52" fill="none" stroke="{ORANGE}"/>
-    <text x="977" y="362" font-size="11" text-anchor="middle" font-weight="700"
+    <rect x="975" y="240" width="175" height="210" fill="#fff" stroke="{BLEU}"/>
+    <path d="M975,252 L975,240 L987,240" fill="none" stroke="{BLEU}" stroke-width="2.6"/>
+    <path d="M1150,438 L1150,450 L1138,450" fill="none" stroke="{BLEU}" stroke-width="2.6"/>
+    <text x="1062" y="268" font-size="14" text-anchor="middle" font-weight="700">RAG</text>
+    <text x="1062" y="286" font-size="14" text-anchor="middle" font-weight="700">Index vectoriel</text>
+    <text x="1062" y="304" font-size="12" text-anchor="middle" font-family="{MONO}"
+          fill="{CYAN}">FAISS</text>
+    <ellipse cx="1062" cy="345" rx="46" ry="10" fill="none" stroke="{ORANGE}"/>
+    <path d="M1016,345 v55 a46,10 0 0 0 92,0 v-55" fill="none" stroke="{ORANGE}"/>
+    <text x="1062" y="380" font-size="13" text-anchor="middle" font-weight="700"
           fill="{ORANGE}">FEVER</text>
   </g>
 
   <!-- Liaisons. Ce sont aussi les trajectoires des blocs animés, d'où les
        identifiants et le choix de <path> plutôt que <line>/<polyline> :
        <mpath> ne sait suivre qu'un <path>. -->
-  <path id="pUser" class="liaison" d="M88,265 L146,265"
+  <path id="pUser" class="liaison" d="M88,271 L146,271"
         marker-end="url(#archArrow)" marker-start="url(#archArrow)"/>
-  <path id="pUserRetour" d="M146,265 L88,265" fill="none" stroke="none"/>
-  <path id="pItfLlm" class="liaison" d="M340,265 L426,265" marker-end="url(#archArrow)"/>
-  <path id="pLlmExt" class="liaison" d="M600,265 L646,265" marker-end="url(#archArrow)"/>
-  <path id="pLlmScg" class="liaison" d="M515,294 L515,342" marker-end="url(#archArrow)"/>
-  <path id="pExtRag" class="liaison" d="M747,294 L747,314 L891,314"
+  <path id="pUserRetour" d="M146,271 L88,271" fill="none" stroke="none"/>
+  <path id="pItfLlm" class="liaison" d="M340,271 L431,271" marker-end="url(#archArrow)"/>
+  <path id="pLlmExt" class="liaison" d="M615,271 L701,271" marker-end="url(#archArrow)"/>
+  <path id="pLlmScg" class="liaison" d="M525,302 L525,386" marker-end="url(#archArrow)"/>
+  <path id="pExtRag" class="liaison" d="M805,302 L805,325 L971,325"
         marker-end="url(#archArrow)"/>
-  <path id="pScgFus" class="liaison" d="M527,404 L527,440 L635,440 L635,464"
+  <path id="pScgFus" class="liaison" d="M537,452 L537,490 L700,490 L700,516"
         marker-end="url(#archArrow)"/>
-  <path id="pRagFus" class="liaison" d="M977,431 L977,440 L737,440 L737,464"
+  <path id="pRagFus" class="liaison" d="M1062,450 L1062,490 L840,490 L840,516"
         marker-end="url(#archArrow)"/>
-  <path id="pFusItf" class="liaison" d="M687,526 L687,595 L255,595 L255,296"
+  <path id="pFusItf" class="liaison" d="M770,582 L770,650 L255,650 L255,306"
         marker-end="url(#archArrow)"/>
-  <text x="525" y="322" font-size="9.5" font-family="{MONO}" fill="{BLEU}">5 régénérations</text>
+  <text x="578" y="350" font-size="12.5" font-family="{MONO}" fill="{BLEU}">5 régénérations</text>
+  <text x="578" y="368" font-size="12.5" font-family="{MONO}" fill="{BLEU}"
+        opacity="0.8">températures croissantes</text>
 
   {MOUVEMENTS}
 </svg>
 """
 )
 
-SCHEMA_HAUTEUR = 700
+SCHEMA_HAUTEUR = 720
 
 # ==============================================================================
 # INTERFACE
 # ==============================================================================
-st.subheader("Comment ça marche ?")
-
 components.html(SCHEMA, height=SCHEMA_HAUTEUR, scrolling=False)
 
 st.markdown(
