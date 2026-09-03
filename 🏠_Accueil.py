@@ -60,6 +60,32 @@ st.markdown(
         justify-content: center;
     }
     [data-testid="stTopNavLink"] { font-weight: 600; }
+
+    /* Ouverture et fermeture de la barre latérale. Streamlit ne révèle ces
+       boutons qu'au survol, ce qui les rend introuvables à qui ne les cherche
+       pas — et leur contraste dépendait du thème. Ils restent donc visibles en
+       permanence, sur une pastille neutre qui se pose aussi bien sur un fond
+       clair que sombre, la flèche héritant la couleur du texte. */
+    [data-testid="stSidebarCollapseButton"],
+    [data-testid="stExpandSidebarButton"] {
+        display: flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
+    [data-testid="stSidebarCollapseButton"] button,
+    [data-testid="stExpandSidebarButton"] button {
+        color: inherit !important;
+        background: rgba(128, 128, 128, 0.18) !important;
+        border-radius: 6px !important;
+    }
+    [data-testid="stSidebarCollapseButton"] button:hover,
+    [data-testid="stExpandSidebarButton"] button:hover {
+        background: rgba(128, 128, 128, 0.32) !important;
+    }
+    [data-testid="stSidebarCollapseButton"] svg,
+    [data-testid="stExpandSidebarButton"] svg {
+        fill: currentColor !important;
+    }
 </style>
 """,
     unsafe_allow_html=True,
