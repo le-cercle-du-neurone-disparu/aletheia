@@ -274,10 +274,13 @@ st.markdown(
     .section-title {
         font-size: 1.8rem !important;
         font-weight: 700 !important;
-        color: var(--text-primary) !important;
+        /* `inherit` et non --text-primary, qui vaut blanc : ce titre est posé à
+           même la page et non sur une carte sombre. Hériter le rend lisible
+           dans le thème clair comme dans le sombre. */
+        color: inherit !important;
         margin: 2rem 0 1rem 0 !important;
         letter-spacing: -0.02em !important;
-        text-shadow: 0 2px 10px rgba(0,0,0,0.5) !important;
+        /* L'ombre portée n'avait de sens que sur l'ancien fond sombre. */
     }
     
     .section-subtitle {
