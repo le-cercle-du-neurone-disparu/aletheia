@@ -75,12 +75,12 @@ st.markdown(
 # L'ordre de cette liste est celui du menu.
 PAGES = [
     st.Page("views/accueil.py", title="Accueil", icon="🏠", default=True),
-    st.Page("views/comment.py", title="Comment ?", icon="🏗️", url_path="comment"),
+    st.Page("views/equipe.py", title="Équipe", icon="👥", url_path="equipe"),
     st.Page(
         "views/prediction.py", title="Prédiction", icon="🔎", url_path="prediction"
     ),
+    st.Page("views/comment.py", title="Comment ?", icon="🏗️", url_path="comment"),
     st.Page("views/analyse.py", title="Analyse", icon="📊", url_path="analyse"),
-    st.Page("views/equipe.py", title="Équipe", icon="👥", url_path="equipe"),
 ]
 
 st.navigation(PAGES, position="top").run()
