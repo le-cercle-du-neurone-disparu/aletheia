@@ -262,10 +262,10 @@ SCHEMA = (
        dans un cadre de bronze — il n'appartient ni au monde d'Aletheia ni à
        celui de Berlue, il les regarde travailler. Sa question descend de là. -->
   <g>
-    <image href="app/static/penseur.webp" x="-5" y="11" width="100" height="129"
+    <image href="app/static/penseur.webp" x="-8" y="-4" width="106" height="137"
            preserveAspectRatio="xMidYMid meet"/>
-    <rect x="-5" y="11" width="100" height="129" fill="none" stroke="{BRONZE}" stroke-width="2"/>
-    <rect x="-1" y="15" width="92" height="121" fill="none" stroke="{BRONZE}" stroke-opacity="0.45"/>
+    <rect x="-15" y="-11" width="120" height="151" fill="none" stroke="{BRONZE}" stroke-width="2"/>
+    <rect x="-11" y="-7" width="112" height="143" fill="none" stroke="{BRONZE}" stroke-opacity="0.45"/>
     <text x="45" y="160" font-size="13.5" text-anchor="middle">Utilisateur</text>
   </g>
 
