@@ -87,7 +87,7 @@ if bg_image_base64:
         background-size: cover !important;
         background-position: center !important;
         background-repeat: no-repeat !important;
-        opacity: 0.7 !important;
+        opacity: 0.3 !important;
         z-index: 0 !important;
         pointer-events: none !important;
     }}
