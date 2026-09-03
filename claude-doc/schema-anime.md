@@ -34,6 +34,18 @@ Trois acteurs, trois traitements graphiques distincts :
 - **Berlue** — le moteur de vérification : fond quadrillé, filets bleus, repères
   d'angle, chasse fixe. Il ne connaît pas l'interface.
 
+Deux libellés échappent à ce découpage : **`FEVER_corpus`** et
+**`SelfCheckGPT`**, les seules briques empruntées à l'extérieur. Berlue ne fait
+que les mettre en œuvre, elles n'appartiennent à aucun des deux camps — d'où un
+traitement unique, partagé par les deux et employé nulle part ailleurs : violet
+`#7A3A93`, chasse fixe, petites capitales espacées, même corps. Il se règle en un
+seul endroit, `SOURCE` / `SOURCE_TAILLE` / `SOURCE_ATTRS` en tête de fichier, et
+un bloc technique le prend via `_composant_berlue(..., source=True)`. Le violet
+est le seul créneau libre de la page : le bronze désigne déjà l'utilisateur,
+l'orange la famille RAG, le bleu et le cyan Berlue lui-même. La légende sous le
+schéma reprend la même couleur et la même casse, pour que les deux liens se
+rattachent visuellement à ce qu'ils nomment.
+
 ---
 
 ## Modifier l'animation

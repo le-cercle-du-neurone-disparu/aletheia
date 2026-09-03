@@ -37,6 +37,19 @@ ORANGE = "#F86F32"
 FOND_TECH = "#EFF4FB"
 MONO = 'ui-monospace, "SF Mono", Menlo, Consolas, monospace'
 
+# Les deux briques empruntées à l'extérieur : le corpus FEVER et la méthode
+# SelfCheckGPT. Elles n'appartiennent ni à Aletheia ni à Berlue, qui ne fait que
+# les mettre en œuvre. D'où un traitement unique, partagé par les deux et
+# employé nulle part ailleurs : violet, chasse fixe, petites capitales espacées.
+# Le violet est le seul créneau libre de la page — le bronze désigne déjà
+# l'utilisateur, l'orange la famille RAG, le bleu et le cyan Berlue lui-même.
+SOURCE = "#7A3A93"
+SOURCE_TAILLE = 14
+SOURCE_ATTRS = (
+    f'font-family="{MONO}" font-weight="700" font-variant="small-caps"'
+    f' letter-spacing="0.8" fill="{SOURCE}"'
+)
+
 # Cinq échantillons régénérés à températures croissantes : du froid au chaud.
 TEMPERATURES = ["#2F6FBF", "#5B86C9", "#9A82AE", "#D3796F", "#E8533F"]
 
@@ -80,9 +93,15 @@ def _composant_aletheia(x, y, w, h, titre, sous_titre=""):
   </g>"""
 
 
-def _composant_berlue(x, y, w, h, titre, ligne2="", sous_titre=""):
-    """Bloc technique : angles vifs, repères d'angle, sous-titre en chasse fixe."""
-    lignes = [(14, titre, 'font-weight="700"')]
+def _composant_berlue(x, y, w, h, titre, ligne2="", sous_titre="", source=False):
+    """Bloc technique : angles vifs, repères d'angle, sous-titre en chasse fixe.
+
+    `source=True` passe le titre au traitement commun des briques empruntées.
+    """
+    if source:
+        lignes = [(SOURCE_TAILLE, titre, SOURCE_ATTRS)]
+    else:
+        lignes = [(14, titre, 'font-weight="700"')]
     if ligne2:
         lignes.append((14, ligne2, 'font-weight="700"'))
     if sous_titre:
@@ -222,7 +241,7 @@ STYLE = """
 SCHEMA = (
     STYLE
     + f"""
-<svg viewBox="-20 -60 1220 740" role="img" aria-label="Architecture de la démo. À gauche, l'utilisateur échange avec Aletheia, l'application web. À droite, Berlue, le moteur de vérification : l'interface d'Aletheia passe la question au LLM, qui produit une réponse envoyée à l'extracteur d'affirmations et, en parallèle, cinq réponses régénérées à températures croissantes envoyées à SelfCheckGPT. L'extracteur découpe la réponse en affirmations et interroge le RAG et son index vectoriel FAISS, construit sur le corpus FEVER. SelfCheckGPT et RAG envoient chacun leur évaluation à la fusion de score, qui fabrique le score, sa catégorisation et son analyse, et les renvoie à l'interface puis à l'utilisateur.">
+<svg viewBox="-20 -60 1220 740" role="img" aria-label="Architecture de la démo. À gauche, l'utilisateur échange avec Aletheia, l'application web. À droite, Berlue, le moteur de vérification : l'interface d'Aletheia passe la question au LLM, qui produit une réponse envoyée à l'extracteur d'affirmations et, en parallèle, cinq réponses régénérées à températures croissantes envoyées à SelfCheckGPT. L'extracteur découpe la réponse en affirmations et interroge le RAG et son index vectoriel FAISS, construit sur le corpus FEVER_corpus. SelfCheckGPT et RAG envoient chacun leur évaluation à la fusion de score, qui fabrique le score, sa catégorisation et son analyse, et les renvoie à l'interface puis à l'utilisateur.">
   <defs>
     <marker id="archArrow" viewBox="0 0 10 10" refX="8" refY="5"
             markerWidth="7" markerHeight="7" orient="auto-start-reverse">
@@ -292,7 +311,8 @@ SCHEMA = (
 
   {_composant_berlue(435, 240, 180, 62, "LLM", "", "ollama · transformers")}
   {_composant_berlue(705, 240, 200, 62, "Extracteur", "d'affirmations")}
-  {_composant_berlue(435, 390, 205, 62, "SelfCheckGPT", "", "module selfcheckgpt")}
+  {_composant_berlue(435, 390, 205, 62, "SelfCheckGPT", "", "module selfcheckgpt",
+                     source=True)}
   {_composant_berlue(660, 520, 220, 62, "Fusion Score")}
 
   <!-- RAG et son corpus -->
@@ -304,10 +324,10 @@ SCHEMA = (
     <text x="1062" y="286" font-size="14" text-anchor="middle" font-weight="700">Index vectoriel</text>
     <text x="1062" y="304" font-size="12" text-anchor="middle" font-family="{MONO}"
           fill="{CYAN}">FAISS</text>
-    <ellipse cx="1062" cy="345" rx="46" ry="10" fill="none" stroke="{ORANGE}"/>
-    <path d="M1016,345 v55 a46,10 0 0 0 92,0 v-55" fill="none" stroke="{ORANGE}"/>
-    <text x="1062" y="380" font-size="13" text-anchor="middle" font-weight="700"
-          fill="{ORANGE}">FEVER</text>
+    <ellipse cx="1062" cy="345" rx="56" ry="10" fill="none" stroke="{ORANGE}"/>
+    <path d="M1006,345 v55 a56,10 0 0 0 112,0 v-55" fill="none" stroke="{ORANGE}"/>
+    <text x="1062" y="381" font-size="{SOURCE_TAILLE}" text-anchor="middle"
+          {SOURCE_ATTRS}>FEVER_corpus</text>
   </g>
 
   <!-- Liaisons. Ce sont aussi les trajectoires des blocs animés, d'où les
@@ -350,11 +370,15 @@ st.markdown(
    prédiction et d'analyse. <strong>Berlue</strong> est le moteur de
    vérification qu'elle interroge — il ne connaît pas l'interface.</p>
 <p><a href="https://huggingface.co/datasets/fever/fever" target="_blank"
-      rel="noopener" style="color: #F86F32; font-weight: 700; text-decoration: none;">FEVER</a>
+      rel="noopener" style="color: #7A3A93; font-weight: 700; text-decoration: none;
+      font-family: ui-monospace, Menlo, Consolas, monospace; font-variant: small-caps;
+      letter-spacing: 0.04em;">FEVER_corpus</a>
    : ~145k affirmations Wikipédia étiquetées soutenue / réfutée / pas assez
    d'info, chacune avec sa preuve — le corpus qu'on indexe pour le RAG inversé.</p>
 <p><a href="https://github.com/potsawee/selfcheckgpt" target="_blank"
-      rel="noopener" style="color: #345AB2; font-weight: 700; text-decoration: none;">SelfCheckGPT</a>
+      rel="noopener" style="color: #7A3A93; font-weight: 700; text-decoration: none;
+      font-family: ui-monospace, Menlo, Consolas, monospace; font-variant: small-caps;
+      letter-spacing: 0.04em;">SelfCheckGPT</a>
    : implémentation de référence du module de détection d'hallucination sans
    boîte noire, utilisé en parallèle du RAG inversé.</p>
 </div>
