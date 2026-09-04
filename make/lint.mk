@@ -1,7 +1,9 @@
 # ==============================================================================
 # 🧹 LINT
 # ==============================================================================
-# Python : ruff (dans requirements.txt, cf. pyproject.toml pour la config).
+# Python : ruff (dans requirements.txt), sur ses réglages par défaut — le dépôt
+# n'a pas de pyproject.toml, contrairement à berlue qui règle la longueur de
+# ligne et la sélection de règles.
 # Shell : shellcheck — outil externe, pas installable via pip.
 #   Debian/Ubuntu/WSL : sudo apt-get install shellcheck
 #   macOS             : brew install shellcheck

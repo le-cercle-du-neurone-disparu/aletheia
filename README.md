@@ -1,7 +1,13 @@
 # Aletheia
 
 Interface Streamlit du détecteur d'hallucinations LLM. Le backend est le
-projet [Berlue](../berlue). Squelette de base — à implémenter.
+projet [Berlue](../berlue) : Aletheia n'embarque aucun modèle, elle pose les
+questions et met en forme les verdicts.
+
+Cinq pages : l'accueil et son voyant de backend, l'équipe, la **prédiction**
+(poser une question, lire le verdict affirmation par affirmation), le
+fonctionnement expliqué par un schéma animé, et l'**analyse** des évaluations
+déjà en cache.
 
 ## Setup
 
@@ -122,26 +128,43 @@ make run_app_gcp   # utilise BERLUE_API_GCP_URL (cf. .env.example)
 ## Structure
 
 ```
-🏠_Accueil.py           # point d'entrée Streamlit
-pages/                  # pages Prédiction, Évaluation, ...
+🏠_Accueil.py           # point d'entrée : navigation, styles du menu et pied de page
+views/                  # une vue par page du menu
+├── accueil.py          # présentation, voyant du backend, liens vers les dépôts
+├── equipe.py           # fiches de l'équipe, lues dans team.json
+├── prediction.py       # pose une question et affiche les verdicts par affirmation
+├── comment.py          # le fonctionnement, avec le schéma SVG animé
+└── analyse.py          # matrices de confusion des évaluations déjà en cache
 utils/
 ├── config.py           # résolution de l'URL du backend selon l'environnement
-└── api_client.py       # appels /llms, /predict, /evaluate
+└── api_client.py       # appels /llms, /predict et les trois routes d'évaluation
+static/                 # visuels servis en fichiers (cf. .streamlit/config.toml)
+team.json               # source des fiches de views/equipe.py
 scripts/
-└── setup_env.sh        # génère .env interactivement (appelé par make local_setup)
+├── setup_env.sh        # génère .env interactivement (appelé par make local_setup)
+└── schema_gif.py       # exporte le schéma animé de comment.py en GIF (make schema_gif)
+claude-doc/             # notes de conception (le schéma animé)
 .streamlit/
+├── config.toml         # barre d'outils réduite, service statique des visuels
 └── secrets.toml.example  # gabarit des secrets de l'environnement cloud
-Makefile                # local_setup, run_app, run_app_gcp, lint
+Makefile                # local_setup, run_app, run_app_gcp, schema_gif, lint
 ```
+
+Le dossier `pages/`, la convention multipage de Streamlit, n'est pas utilisé :
+elle impose un menu latéral et un ordre dicté par les noms de fichiers. La
+navigation est déclarée à la main dans `🏠_Accueil.py`.
 
 ## Contrat API
 
 Le contrat (routes, schémas des payloads) vit dans le repo du backend `berlue` :
 `berlue/berlue/api/fast.py` et `berlue/berlue/api/schemas.py`.
 
-## TODO
+Les routes consommées ici, toutes dans `utils/api_client.py` :
 
-- [ ] Construire l'UI dans `streamlit_app.py` (ou passer en multipage via un
-      dossier `pages/` si besoin).
-- [ ] Brancher les appels aux endpoints `/predict` et `/evaluate` dans
-      `utils/api_client.py` au fur et à mesure des besoins de l'UI.
+| Route | Ce qu'Aletheia en fait |
+| --- | --- |
+| `GET /llms` | remplit les sélecteurs de modèle, du plus petit au plus grand |
+| `POST /predict` | la vérification elle-même (page Prédiction) |
+| `GET /evaluated-models` | les scopes déjà évalués (page Analyse) |
+| `GET /baseline-evaluation` | la baseline NLI en mode dataset |
+| `GET /baseline-evaluation-generated` | la baseline en mode généré |
