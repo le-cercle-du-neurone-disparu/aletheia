@@ -45,14 +45,11 @@ st.markdown(
     /* ===== VARIABLES ===== */
     :root {
         --primary: #667eea;
-        --primary-dark: #5a67d8;
         --secondary: #764ba2;
         --success: #48bb78;
         --warning: #ed8936;
         --danger: #fc8181;
-        --bg-dark: #0a0a0f;
         --bg-card: rgba(20, 20, 30, 0.92);
-        --bg-card-hover: rgba(26, 26, 46, 0.95);
         --text-primary: #ffffff;
         --text-secondary: #a0aec0;
         --border-color: rgba(45, 45, 68, 0.8);
@@ -201,29 +198,6 @@ st.markdown(
         flex-wrap: wrap !important;
     }
     
-    .btn-launch-api {
-        background: linear-gradient(135deg, var(--primary), var(--secondary)) !important;
-        color: white !important;
-        border: none !important;
-        padding: 0.6rem 1.8rem !important;
-        border-radius: 8px !important;
-        font-weight: 600 !important;
-        font-size: 0.95rem !important;
-        cursor: pointer !important;
-        transition: all 0.3s ease !important;
-    }
-    
-    .btn-launch-api:hover {
-        transform: scale(1.05) !important;
-        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4) !important;
-    }
-    
-    .btn-launch-api:disabled {
-        opacity: 0.6 !important;
-        cursor: not-allowed !important;
-        transform: none !important;
-    }
-    
     .btn-refresh {
         background: var(--bg-card) !important;
         color: var(--text-secondary) !important;
@@ -281,12 +255,6 @@ st.markdown(
         margin: 2rem 0 1rem 0 !important;
         letter-spacing: -0.02em !important;
         /* L'ombre portée n'avait de sens que sur l'ancien fond sombre. */
-    }
-    
-    .section-subtitle {
-        color: var(--text-secondary) !important;
-        font-size: 1.05rem !important;
-        margin-bottom: 1.5rem !important;
     }
     
     /* ===== PROCESS STEPS ===== */
@@ -511,28 +479,6 @@ st.markdown(
         font-weight: 500 !important;
     }
     
-    /* ===== FOOTER ===== */
-    .footer {
-        margin-top: 3rem !important;
-        padding: 2rem 0 1rem 0 !important;
-        border-top: 1px solid var(--border-color) !important;
-        text-align: center !important;
-    }
-    
-    .footer .disclaimer {
-        color: var(--text-secondary) !important;
-        font-size: 0.85rem !important;
-        opacity: 0.7 !important;
-        font-style: italic !important;
-    }
-    
-    .footer .copyright {
-        color: var(--text-secondary) !important;
-        font-size: 0.8rem !important;
-        opacity: 0.5 !important;
-        margin-top: 0.5rem !important;
-    }
-    
     /* ===== DÉPÔTS ===== */
     /* Mêmes fond, bordure et survol que .about-item : ces cartes sont du même
        registre, une fiche par objet. La carte entière est le lien, la cible
@@ -621,15 +567,6 @@ st.markdown(
 """,
     unsafe_allow_html=True,
 )
-
-# ==============================================================================
-# INITIALISATION DE L'ÉTAT DE SESSION
-# ==============================================================================
-if "api_launching" not in st.session_state:
-    st.session_state.api_launching = False
-
-if "api_launch_result" not in st.session_state:
-    st.session_state.api_launch_result = None
 
 # ==============================================================================
 # CONTENU DE LA PAGE D'ACCUEIL
