@@ -191,6 +191,14 @@ st.markdown(
         line-height: 1 !important;
     }
 
+    /* Le cadre du champ de saisie prend la couleur primaire de Streamlit, un
+       rouge qui signale ailleurs une erreur. Il reprend le vert du bouton
+       d'action : la question et son déclencheur forment une seule commande. */
+    [data-testid="stTextInputRootElement"]:focus-within {
+        border-color: #2A9F56 !important;
+        box-shadow: none !important;
+    }
+
     .ligne-analyse {
         /* `inherit` et non --text-primary, qui vaut blanc : ce bloc de style a
            été écrit pour un fond sombre, alors que l'app suit le thème clair de
@@ -498,27 +506,31 @@ with st.sidebar:
 
 # --- ZONE PRINCIPALE ---
 
-# Saisie et bouton côte à côte
-col_question, col_action = st.columns([5, 1], vertical_alignment="bottom")
-with col_question:
-    question_input = st.text_input(
-        "Votre question",
-        value=st.session_state.get("question", ""),
-        placeholder="Ex: Pourquoi le ciel est-il bleu ?",
-        label_visibility="collapsed",
-    )
-with col_action:
-    # Le triangle est le libellé, et non un ::before : Streamlit enveloppe le
-    # texte dans un conteneur qui occupe la largeur, contre lequel un
-    # pseudo-élément restait collé à gauche. Ici le centrage est celui du bouton.
-    lancer = st.button(
-        "▶",
-        type="primary",
-        use_container_width=True,
-        disabled=not available_llms,
-        key="btn_generer",
-        help="Générer une réponse et la vérifier",
-    )
+# Saisie et bouton côte à côte, dans un formulaire : c'est ce qui fait de la
+# touche Entrée un équivalent du clic sur le bouton. Sans cadre, la mise en
+# page reste celle des deux colonnes.
+with st.form("formulaire_question", border=False):
+    col_question, col_action = st.columns([5, 1], vertical_alignment="bottom")
+    with col_question:
+        question_input = st.text_input(
+            "Votre question",
+            value=st.session_state.get("question", ""),
+            placeholder="Ex: Pourquoi le ciel est-il bleu ?",
+            label_visibility="collapsed",
+        )
+    with col_action:
+        # Le triangle est le libellé, et non un ::before : Streamlit enveloppe
+        # le texte dans un conteneur qui occupe la largeur, contre lequel un
+        # pseudo-élément restait collé à gauche. Ici le centrage est celui du
+        # bouton.
+        lancer = st.form_submit_button(
+            "▶",
+            type="primary",
+            use_container_width=True,
+            disabled=not available_llms,
+            key="btn_generer",
+            help="Générer une réponse et la vérifier (ou touche Entrée)",
+        )
 
 if lancer:
     if not question_input.strip():
