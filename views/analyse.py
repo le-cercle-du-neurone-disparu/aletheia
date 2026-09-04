@@ -28,13 +28,9 @@ st.markdown(
 <style>
     :root {
         --primary: #667eea;
-        --secondary: #764ba2;
         --success: #48bb78;
-        --warning: #ed8936;
         --danger: #fc8181;
-        --bg-dark: #0a0a0f;
         --bg-card: #14141e;
-        --text-primary: #ffffff;
         --text-secondary: #a0aec0;
         --border-color: #2d2d44;
     }

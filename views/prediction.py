@@ -28,64 +28,12 @@ st.markdown(
     :root {
         --primary: #667eea;
         --secondary: #764ba2;
-        --success: #48bb78;
-        --warning: #ed8936;
-        --danger: #fc8181;
-        --bg-dark: #0a0a0f;
         --bg-card: #14141e;
         --text-primary: #ffffff;
         --text-secondary: #a0aec0;
         --border-color: #2d2d44;
     }
 
-    .claim-card {
-        padding: 1rem 1.2rem;
-        border-radius: 10px;
-        margin-bottom: 0.8rem;
-        border-left: 5px solid;
-        background: var(--bg-card);
-        border: 1px solid var(--border-color);
-        border-left-width: 5px;
-    }
-    .claim-green { border-left-color: var(--success); }
-    .claim-red { border-left-color: var(--danger); }
-    .claim-yellow { border-left-color: var(--warning); }
-    
-    .claim-card .claim-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 0.3rem;
-    }
-    
-    .claim-card .claim-text {
-        color: var(--text-primary);
-        font-size: 0.95rem;
-        line-height: 1.5;
-    }
-    
-    .status-badge {
-        display: inline-block;
-        padding: 0.2rem 0.8rem;
-        border-radius: 20px;
-        font-size: 0.75rem;
-        font-weight: 600;
-        color: white;
-    }
-    .badge-green { background: var(--success); }
-    .badge-red { background: var(--danger); }
-    .badge-yellow { background: var(--warning); color: #1a1a2e; }
-    
-    .answer-box {
-        background: var(--bg-card);
-        padding: 1.5rem;
-        border-radius: 10px;
-        border: 1px solid var(--border-color);
-        min-height: 120px;
-        color: var(--text-primary);
-        line-height: 1.6;
-    }
-    
     .process-mini {
         background: var(--bg-card);
         border: 1px solid var(--border-color);
